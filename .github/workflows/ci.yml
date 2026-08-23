@@ -41,6 +41,8 @@ jobs:
           npm run typecheck
 
       - name: Audit the pinned Core release
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: make audit-core-release
 
       - name: Rebuild and verify WASM
