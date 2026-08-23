@@ -1,0 +1,53 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  package-and-wasm:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Check out malt-ts
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22.12.0
+          cache: npm
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      - name: Install package dependencies
+        run: npm ci
+
+      - name: Verify public API and browser runtime
+        run: |
+          npm test
+          npm run typecheck
+
+      - name: Audit the pinned Core release
+        run: make audit-core-release
+
+      - name: Rebuild and verify WASM
+        run: |
+          go test ./...
+          make test-wasm
+          git diff --exit-code -- assets
+
+      - name: Inspect the npm package
+        run: npm pack --dry-run

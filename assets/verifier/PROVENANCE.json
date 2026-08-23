@@ -1,0 +1,40 @@
+{
+  "schema": "malt.ts-verifier.provenance/v1",
+  "source_repository": "https://github.com/DeWebProtocol/malt-ts.git",
+  "build_inputs_sha256": "1214bb03b03a7c6294717b8105fe6a81206bd496bf3d9339d939be6f47b38129",
+  "core": {
+    "module_path": "github.com/dewebprotocol/malt-core",
+    "module_version": "v0.0.8",
+    "source_repository": "https://github.com/DeWebProtocol/malt-core.git",
+    "source_commit": "6c55430d39d17a4b4e633dbdc5915977cef8755d",
+    "module_sum": "h1:RoJNvF2MwAELc7D2aOxaaIldXSVw0DM2tKMCVBkOQSQ=",
+    "go_mod_sum": "h1:Etv0LbUaUDw4zwFGK2RiTqPasc2VAx6jjgJaxzFjMfg="
+  },
+  "target": "js/wasm",
+  "exports": [
+    "maltVerifyArtifact",
+    "maltVerifyMapProof",
+    "maltVerifyRead",
+    "maltVerifyResolve"
+  ],
+  "go_version": "go1.25.7",
+  "go_toolchain": "go version go1.25.7 linux/amd64",
+  "build_flags": [
+    "-mod=readonly",
+    "-buildvcs=false",
+    "-trimpath"
+  ],
+  "build_environment": {
+    "GO111MODULE": "on",
+    "GOENV": "off",
+    "GOWORK": "off",
+    "GOFLAGS": "",
+    "GOTOOLCHAIN": "local"
+  },
+  "codegen_environment": {
+    "CGO_ENABLED": "0",
+    "GOEXPERIMENT": "none",
+    "GOWASM": "",
+    "GOFIPS140": "off"
+  }
+}

@@ -1,0 +1,92 @@
+{
+  "schema": "malt.ts-writer.provenance/v1",
+  "source_repository": "https://github.com/DeWebProtocol/malt-ts.git",
+  "build_inputs_sha256": "1214bb03b03a7c6294717b8105fe6a81206bd496bf3d9339d939be6f47b38129",
+  "core": {
+    "module_path": "github.com/dewebprotocol/malt-core",
+    "module_version": "v0.0.8",
+    "source_repository": "https://github.com/DeWebProtocol/malt-core.git",
+    "source_commit": "6c55430d39d17a4b4e633dbdc5915977cef8755d",
+    "module_sum": "h1:RoJNvF2MwAELc7D2aOxaaIldXSVw0DM2tKMCVBkOQSQ=",
+    "go_mod_sum": "h1:Etv0LbUaUDw4zwFGK2RiTqPasc2VAx6jjgJaxzFjMfg="
+  },
+  "target": "js/wasm",
+  "exports": [
+    "maltComputeClientRootV1",
+    "maltWriterAcceptSessionReceiptV1",
+    "maltWriterBootstrapSessionV1",
+    "maltWriterCloseSessionV1",
+    "maltWriterDiscardSessionCandidateV1",
+    "maltWriterGetPreparedResultV1",
+    "maltWriterLoadSessionV1",
+    "maltWriterPrepareSessionV1",
+    "maltWriterRestoreSessionV1",
+    "maltWriterSnapshotSessionV1",
+    "maltWriterValidateReceiptV1"
+  ],
+  "parameters": {
+    "id": "malt.ipa-parameters/v1",
+    "sha256": "3799df0a77d1843b13a3a08744165180a12e1cd2dca529bee64ad691ac63adaf"
+  },
+  "go_version": "go1.25.7",
+  "go_toolchain": "go version go1.25.7 linux/amd64",
+  "build_flags": [
+    "-mod=readonly",
+    "-buildvcs=false",
+    "-trimpath"
+  ],
+  "artifacts": {
+    "kzg": {
+      "file": "malt-writer-kzg.wasm",
+      "build_tags": [
+        "writer_kzg"
+      ]
+    },
+    "ipa": {
+      "direct": {
+        "file": "malt-writer-ipa-direct.wasm",
+        "build_tags": [
+          "writer_ipa",
+          "malt_no_default_kzg"
+        ],
+        "linker_profile": "direct",
+        "retained_fixed_base_table_bytes": 0
+      },
+      "compact": {
+        "file": "malt-writer-ipa-compact.wasm",
+        "build_tags": [
+          "writer_ipa",
+          "malt_no_default_kzg"
+        ],
+        "linker_profile": "compact",
+        "retained_fixed_base_table_bytes": 12582912
+      },
+      "fast": {
+        "file": "malt-writer-ipa-fast.wasm",
+        "build_tags": [
+          "writer_ipa",
+          "malt_no_default_kzg"
+        ],
+        "linker_profile": "fast",
+        "retained_fixed_base_table_bytes": 350355456
+      }
+    }
+  },
+  "runtime_invariants": {
+    "one_runtime_per_controller": true,
+    "exact_backend_profile": true
+  },
+  "build_environment": {
+    "GO111MODULE": "on",
+    "GOENV": "off",
+    "GOWORK": "off",
+    "GOFLAGS": "",
+    "GOTOOLCHAIN": "local"
+  },
+  "codegen_environment": {
+    "CGO_ENABLED": "0",
+    "GOEXPERIMENT": "none",
+    "GOWASM": "",
+    "GOFIPS140": "off"
+  }
+}

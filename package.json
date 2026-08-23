@@ -1,0 +1,68 @@
+{
+  "name": "@dewebprotocol/malt",
+  "version": "0.0.1",
+  "description": "Stable TypeScript and browser WASM SDK for MALT",
+  "type": "module",
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/DeWebProtocol/malt-ts.git"
+  },
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "files": [
+    "assets/",
+    "src/",
+    "types/",
+    "vite/",
+    "LICENSE",
+    "README.md",
+    "malt-core.lock.json"
+  ],
+  "exports": {
+    ".": {
+      "types": "./types/index.d.ts",
+      "import": "./src/index.mjs"
+    },
+    "./browser": {
+      "types": "./types/index.d.ts",
+      "import": "./src/index.mjs"
+    },
+    "./verifier": {
+      "types": "./types/verifier.d.ts",
+      "import": "./src/verifier.mjs"
+    },
+    "./writer": {
+      "types": "./types/writer.d.ts",
+      "import": "./src/writer.mjs"
+    },
+    "./release": {
+      "types": "./types/release.d.ts",
+      "import": "./src/release.mjs"
+    },
+    "./vite": {
+      "types": "./types/vite.d.ts",
+      "import": "./vite/index.mjs"
+    },
+    "./package.json": "./package.json"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "check:assets": "./scripts/check-wasm.sh",
+    "build:wasm": "./scripts/build-wasm.sh assets",
+    "test:wasm": "make test-wasm"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
+  "devDependencies": {
+    "happy-dom": "20.11.1",
+    "multiformats": "13.4.1",
+    "typescript": "5.9.3",
+    "vite": "8.1.5",
+    "vitest": "4.1.10"
+  }
+}
