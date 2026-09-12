@@ -1,3 +1,4 @@
+export const authenticationVerifierProfile = "malt.authentication/0"
 export const resolveVerifierProfile = 'malt.resolve/v0alpha1'
 export const readVerifierProfile = "malt.read/v0alpha1"
 export const mapProofVerifierProfile = "malt.map-proof/v0alpha1"
@@ -438,6 +439,10 @@ class BrowserVerifierProvider {
     return this.verify("mapProof", json, signal)
   }
 
+  authentication(json, signal) {
+    return this.verify("authentication", json, signal)
+  }
+
   artifact(json, signal) {
     return this.verify('artifact', json, signal)
   }
@@ -837,4 +842,27 @@ function abortError() {
 
 function errorMessage(err) {
   return err instanceof Error ? err.message : String(err)
+}
+
+// Typed coordinates and derivation rules are decoded only by Core/WASM.
+// Forward the caller's explicit steps and uint64 strings without normalization.
+export function createAuthenticationVerification({ request, result }) {
+  if (!request || request.profile !== authenticationVerifierProfile ||
+      typeof request.root !== 'string' || !request.root ||
+      !result || result.profile !== authenticationVerifierProfile) {
+    throw new Error('unsupported authentication request or result profile')
+  }
+  return structuredClone({ request, result })
+}
+
+export async function verifyAuthenticationLocally({ request, result,
+  runtimeURL = defaultVerifierRuntimeURL, wasmURL = defaultVerifierWASMURL,
+  signal, provider }) {
+  try {
+    return await verifyLocally({ kind: 'authentication', profile: authenticationVerifierProfile,
+      value: createAuthenticationVerification({ request, result }),
+      runtimeURL, wasmURL, signal, provider })
+  } catch (error) {
+    return invalidResult(authenticationVerifierProfile, error)
+  }
 }
