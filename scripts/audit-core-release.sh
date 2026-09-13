@@ -16,16 +16,18 @@ readarray -t lock_fields < <(
 	LOCK_PATH="${lock_path}" node -e '
 		const fs = require("node:fs")
 		const lock = JSON.parse(fs.readFileSync(process.env.LOCK_PATH, "utf8"))
-		process.stdout.write(`${lock.module_version}\n${lock.release.manifest}\n`)
+		process.stdout.write(`${lock.module_version}\n${lock.release.manifest}\n${lock.release.manifest_sha256}\n`)
 	'
 )
 core_version="${lock_fields[0]:-}"
 manifest_name="${lock_fields[1]:-}"
+manifest_sha256="${lock_fields[2]:-}"
 [[ "${core_version}" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$ ]] || {
 	printf 'invalid locked Core version\n' >&2
 	exit 1
 }
-[[ "${manifest_name}" =~ ^malt-wasm-release-v[0-9]+\.[0-9]+\.[0-9]+-[0-9a-f]{64}\.json$ ]] || {
+[[ "${manifest_sha256}" =~ ^[0-9a-f]{64}$ &&
+   "${manifest_name}" == "malt-wasm-release-${core_version}-${manifest_sha256}.json" ]] || {
 	printf 'invalid locked Core release manifest\n' >&2
 	exit 1
 }

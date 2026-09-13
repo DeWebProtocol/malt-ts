@@ -166,7 +166,7 @@ PROVENANCE_PATH="${verifier_staging}/PROVENANCE.json" node -e '
 		},
 		target: "js/wasm",
 		exports: [
-			"maltVerifyArtifact", "maltVerifyMapProof",
+			"maltVerifyArtifact", "maltVerifyAuthentication", "maltVerifyMapProof",
 			"maltVerifyRead", "maltVerifyResolve"
 		],
 		go_version: process.env.GO_VERSION,
@@ -204,7 +204,7 @@ PROVENANCE_PATH="${writer_staging}/PROVENANCE.json" node -e '
 		},
 		target: "js/wasm",
 		exports: [
-			"maltComputeClientRootV1", "maltWriterAcceptSessionReceiptV1",
+			"maltComputeClientRootV1", "maltPrepareAuthentication", "maltWriterAcceptSessionReceiptV1",
 			"maltWriterBootstrapSessionV1", "maltWriterCloseSessionV1",
 			"maltWriterDiscardSessionCandidateV1", "maltWriterGetPreparedResultV1",
 			"maltWriterLoadSessionV1", "maltWriterPrepareSessionV1",

@@ -11,9 +11,9 @@ writer semantics independently in TypeScript.
 
 ## Version and Core release
 
-The package is currently `0.0.1` and is built against the published
-`malt-core v0.0.8` release at commit
-`6c55430d39d17a4b4e633dbdc5915977cef8755d`.
+The package is currently `0.0.2-RC.1` and is built against the published
+`malt-core v0.0.9-RC.1` release at commit
+`5fb528ba82f69f9a0acc3df5affb74181c61c827`.
 [`malt-core.lock.json`](./malt-core.lock.json) binds that tag, commit, Go module
 checksums, formal Core WASM release manifest, and Core asset-set digests.
 
@@ -102,13 +102,15 @@ from committing source.
 base64 bytes and decimal uint64 strings; this package performs no AA hashing
 or application path normalization. An unavailable ABI fails closed.
 
-The current distributed assets remain locked to published Core v0.0.8 and do
-**not** execute this new profile. Source integration can use the new Core
-verifier WASM through explicitly configured `wasmURL` and `runtimeURL`, with
-the same artifact verification policy as other custom verifier assets. This
-source change does not publish or relabel those experimental Core builds.
-Official adoption requires a published Core release, a reviewed exact lock
-update, porting its new verifier/writer ABI entry points into this package,
-regenerated assets and full release conformance before Console rollout.
+The distributed verifier and writer assets are rebuilt from this package's ABI
+wrappers against the exact published Core `v0.0.9-RC.1` release. The verifier
+executes typed authentication through `maltVerifyAuthentication`; the internal
+writer ABI also supports `maltPrepareAuthentication`. Release provenance binds
+both exports. Current V0 client-root conformance uses Core's v2 corpus, while
+Core retains its historical v1 corpus independently.
+
+`make audit-core-release` verifies the canonical tag and published release
+manifest, and `make test-wasm` validates both legacy and typed contracts. The
+package version `0.0.2-RC.1` is independent of the locked Core version.
 Root V stays zero throughout that process; a package release does not declare
 production readiness. Core's Root/input specification remains normative.

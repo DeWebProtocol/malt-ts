@@ -88,8 +88,8 @@ lock_fields="$(
 			if (
 				JSON.stringify(releaseKeys) !== JSON.stringify(expectedReleaseKeys) ||
 				lock.release.tag !== moduleVersion ||
-				!/^malt-wasm-release-v[0-9]+\.[0-9]+\.[0-9]+-[0-9a-f]{64}\.json$/.test(lock.release.manifest || "") ||
-				lock.release.manifest_sha256 !== lock.release.manifest.slice(-69, -5) ||
+				!/^[0-9a-f]{64}$/.test(lock.release.manifest_sha256 || "") ||
+				lock.release.manifest !== `malt-wasm-release-${moduleVersion}-${lock.release.manifest_sha256}.json` ||
 				!/^([0-9a-f]{64})$/.test(lock.release.verifier_asset_set_sha256 || "") ||
 				!/^([0-9a-f]{64})$/.test(lock.release.writer_asset_set_sha256 || "")
 			) {

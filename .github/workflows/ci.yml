@@ -37,6 +37,7 @@ jobs:
 
       - name: Verify public API and browser runtime
         run: |
+          node --test scripts/check-writer-backends.test.mjs
           npm test
           npm run typecheck
 

@@ -38,4 +38,7 @@ for backend in all kzg ipa; do
 		"${backend}" \
 		"${map_proof_vectors}"
 done
+node "${malt_module_dir}/scripts/run-authentication-wasm.mjs" verifier \
+	"${verifier_root}/malt-verifier.wasm" "${verifier_root}/wasm_exec.js" \
+	"${malt_module_dir}/conformance/authentication-v0.json" all
 printf 'malt-ts verifier passes the MALT %s conformance corpus.\n' "${malt_version}"
