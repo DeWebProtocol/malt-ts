@@ -93,3 +93,22 @@ npm pack --dry-run
 
 Publishing an npm version, Git tag, or GitHub Release is intentionally separate
 from committing source.
+
+
+## Experimental typed authentication bridge
+
+`verifyAuthenticationLocally({request, result, ...options})` forwards the
+`malt.authentication/0` contract to Core/WASM. Typed inputs preserve opaque
+base64 bytes and decimal uint64 strings; this package performs no AA hashing
+or application path normalization. An unavailable ABI fails closed.
+
+The current distributed assets remain locked to published Core v0.0.8 and do
+**not** execute this new profile. Source integration can use the new Core
+verifier WASM through explicitly configured `wasmURL` and `runtimeURL`, with
+the same artifact verification policy as other custom verifier assets. This
+source change does not publish or relabel those experimental Core builds.
+Official adoption requires a published Core release, a reviewed exact lock
+update, porting its new verifier/writer ABI entry points into this package,
+regenerated assets and full release conformance before Console rollout.
+Root V stays zero throughout that process; a package release does not declare
+production readiness. Core's Root/input specification remains normative.

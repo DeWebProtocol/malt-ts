@@ -98,6 +98,11 @@ async function verify({ id, kind, json }) {
 
 function selectVerifier(kind) {
   switch (kind) {
+    case 'authentication':
+      if (typeof globalThis.maltVerifyAuthentication !== 'function') {
+        throw new Error('loaded Core release does not support malt.authentication/0')
+      }
+      return globalThis.maltVerifyAuthentication
     case 'resolve':
       return globalThis.maltVerifyResolve
     case "read":
