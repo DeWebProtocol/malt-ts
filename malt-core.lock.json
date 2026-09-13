@@ -1,16 +1,16 @@
 {
   "schema": "malt.ts-core-lock/v1",
   "module_path": "github.com/dewebprotocol/malt-core",
-  "module_version": "v0.0.8",
+  "module_version": "v0.0.9-RC.1",
   "source_repository": "https://github.com/DeWebProtocol/malt-core.git",
-  "source_commit": "6c55430d39d17a4b4e633dbdc5915977cef8755d",
-  "module_sum": "h1:RoJNvF2MwAELc7D2aOxaaIldXSVw0DM2tKMCVBkOQSQ=",
-  "go_mod_sum": "h1:Etv0LbUaUDw4zwFGK2RiTqPasc2VAx6jjgJaxzFjMfg=",
+  "source_commit": "5fb528ba82f69f9a0acc3df5affb74181c61c827",
+  "module_sum": "h1:4hkLq3qwBtfVg664moD36rCDljj9bjveCL4e706irkk=",
+  "go_mod_sum": "h1:o6L8K9vJp5hyrVo3fUtSsj0rvNpcboOcOb3nQwnR/gs=",
   "release": {
-    "tag": "v0.0.8",
-    "manifest": "malt-wasm-release-v0.0.8-635311783c4ff204b8061d5637a9caf2d5675e2598c6cca5fd323a90ef350c83.json",
-    "manifest_sha256": "635311783c4ff204b8061d5637a9caf2d5675e2598c6cca5fd323a90ef350c83",
-    "verifier_asset_set_sha256": "286aa0d664ae10de9fef110e352f3a59c6b7b033b16218545835c4fcf380343e",
-    "writer_asset_set_sha256": "dbc99783ed0d2d6c3681ea3ec75fec04bd53fb1bf07ff03ab6393612d5748426"
+    "tag": "v0.0.9-RC.1",
+    "manifest": "malt-wasm-release-v0.0.9-RC.1-90347e262307c18dcf7a271c995dc105ce9f5389f6d86ec0a24cb35dc0ddd533.json",
+    "manifest_sha256": "90347e262307c18dcf7a271c995dc105ce9f5389f6d86ec0a24cb35dc0ddd533",
+    "verifier_asset_set_sha256": "ac0130a36a488668a89c0e3175d44069a8e937ee9fbc3da8b46f7626bed02db4",
+    "writer_asset_set_sha256": "6f845c07588fc302fcd59480544e04933b22689e4f31ec0afd325e1d808cf128"
   }
 }

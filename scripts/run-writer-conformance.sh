@@ -3,6 +3,7 @@ set -Eeuo pipefail
 
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 writer_root="${1:-${repo_root}/assets/writer}"
+sh "${repo_root}/scripts/check-writer-backends.sh"
 
 for command_name in go grep node; do
 	command -v "${command_name}" >/dev/null 2>&1 || {
@@ -25,7 +26,7 @@ for runner in run-writer-wasm-smoke.mjs run-writer-worker-smoke.mjs; do
 		exit 1
 	}
 done
-fixtures="${malt_module_dir}/conformance/client-root/v1/vectors.json"
+fixtures="${malt_module_dir}/conformance/client-root/v2/vectors.json"
 [[ -s "${fixtures}" ]] || {
 	printf 'pinned MALT module is missing the client-root conformance corpus: %s\n' \
 		"${fixtures}" >&2
@@ -34,27 +35,13 @@ fixtures="${malt_module_dir}/conformance/client-root/v1/vectors.json"
 
 node --test "${repo_root}/node-tests/malt-writer-workers.mjs"
 
-if (
-	cd "${repo_root}"
-	GOENV=off GOWORK=off GOFLAGS= GOTOOLCHAIN=auto \
-		go list -buildvcs=false -deps -tags=writer_kzg ./cmd/malt-writer-wasm
-) | grep -q '/auth/commitment/ipa$'; then
-	printf 'malt-ts KZG writer unexpectedly links the IPA backend\n' >&2
-	exit 1
-fi
-if (
-	cd "${repo_root}"
-	GOENV=off GOWORK=off GOFLAGS= GOTOOLCHAIN=auto \
-		go list -buildvcs=false -deps -tags=writer_ipa,malt_no_default_kzg \
-			./cmd/malt-writer-wasm
-) | grep -q '/auth/commitment/kzg$'; then
-	printf 'malt-ts IPA writer unexpectedly links the KZG backend\n' >&2
-	exit 1
-fi
 
 node "${malt_module_dir}/scripts/run-writer-wasm-smoke.mjs" \
 	"${writer_root}/malt-writer-kzg.wasm" \
 	"${writer_root}/wasm_exec.js" "${fixtures}" kzg
+node "${malt_module_dir}/scripts/run-authentication-wasm.mjs" writer \
+	"${writer_root}/malt-writer-kzg.wasm" "${writer_root}/wasm_exec.js" \
+	"${malt_module_dir}/conformance/authentication-v0.json" kzg
 node "${repo_root}/scripts/run-writer-snapshot-smoke.mjs" \
 	"${writer_root}/malt-writer-kzg.wasm" \
 	"${writer_root}/wasm_exec.js" kzg
@@ -62,6 +49,9 @@ for profile in direct compact fast; do
 	node "${malt_module_dir}/scripts/run-writer-wasm-smoke.mjs" \
 		"${writer_root}/malt-writer-ipa-${profile}.wasm" \
 		"${writer_root}/wasm_exec.js" "${fixtures}" ipa "${profile}"
+	node "${malt_module_dir}/scripts/run-authentication-wasm.mjs" writer \
+		"${writer_root}/malt-writer-ipa-${profile}.wasm" "${writer_root}/wasm_exec.js" \
+		"${malt_module_dir}/conformance/authentication-v0.json" ipa
 done
 node "${repo_root}/scripts/run-writer-snapshot-smoke.mjs" \
 	"${writer_root}/malt-writer-ipa-compact.wasm" \

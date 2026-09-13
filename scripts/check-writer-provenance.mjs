@@ -39,6 +39,7 @@ const expectedCodegenEnvironment = Object.freeze({
 
 const expectedExports = Object.freeze([
   'maltComputeClientRootV1',
+  'maltPrepareAuthentication',
   'maltWriterAcceptSessionReceiptV1',
   'maltWriterBootstrapSessionV1',
   'maltWriterCloseSessionV1',

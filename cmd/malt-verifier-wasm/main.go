@@ -18,6 +18,7 @@ import (
 
 func main() {
 	backend := requestedBackend()
+	registerAuthenticationVerifier(backend)
 	verifier, initErr := newVerifier(backend)
 	if initErr != nil {
 		js.Global().Set("maltVerifierInitError", initErr.Error())
