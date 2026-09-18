@@ -19,6 +19,21 @@ func (c *computer) prepareAuthentication(ctx context.Context, data []byte) ([]by
 	if err != nil {
 		return nil, err
 	}
+	e, err := c.authenticationEngine()
+	if err != nil {
+		return nil, err
+	}
+	candidate, err := authentication.Prepare(ctx, e, state)
+	if err != nil {
+		return nil, err
+	}
+	return json.Marshal(candidate)
+}
+
+func (c *computer) authenticationEngine() (*engine.Engine, error) {
+	if c == nil {
+		return nil, fmt.Errorf("writer is not initialized")
+	}
 	profiles := engine.NewRegistry()
 	for _, scheme := range c.schemes {
 		profile, ok := scheme.(engine.ProfileVerifier)
@@ -29,7 +44,22 @@ func (c *computer) prepareAuthentication(ctx context.Context, data []byte) ([]by
 			return nil, err
 		}
 	}
-	candidate, err := authentication.Prepare(ctx, engine.New(input.DefaultRegistry(), profiles), state)
+	return engine.New(input.DefaultRegistry(), profiles), nil
+}
+func (c *computer) updateAuthentication(ctx context.Context, baseJSON, stateJSON []byte) ([]byte, error) {
+	base, err := protocol.DecodeAuthenticationCandidate(baseJSON)
+	if err != nil {
+		return nil, err
+	}
+	state, err := protocol.DecodeAuthenticationState(stateJSON)
+	if err != nil {
+		return nil, err
+	}
+	e, err := c.authenticationEngine()
+	if err != nil {
+		return nil, err
+	}
+	candidate, err := authentication.PrepareUpdate(ctx, e, base, state)
 	if err != nil {
 		return nil, err
 	}

@@ -667,3 +667,18 @@ describe('browser MALT writer lazy router', () => {
     expect(writer.status('ipa')).toMatchObject({ state: 'failed', profile: 'fast' })
   })
 })
+
+it('routes typed candidates through the selected Worker without changing byte inputs', async () => {
+  const harness = loaderHarness()
+  const writer = await harness.writer
+  await writer.whenReady('kzg')
+  const runtime = harness.runtimes[0]
+  runtime.prepareAuthentication = vi.fn(async () => '{"root":"candidate"}')
+  runtime.updateAuthentication = vi.fn(async () => '{"root":"next"}')
+  const state = new Uint8Array([1, 2]), base = new Uint8Array([3, 4])
+  await writer.prepareAuthentication('kzg', state)
+  await writer.updateAuthentication('kzg', base, state)
+  expect(runtime.prepareAuthentication).toHaveBeenCalledWith('kzg', state)
+  expect(runtime.updateAuthentication).toHaveBeenCalledWith('kzg', base, state)
+  writer.terminate()
+})

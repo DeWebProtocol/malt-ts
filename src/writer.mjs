@@ -347,6 +347,7 @@ export class BrowserMaltWriterRouter {
     const selected = requireBackend(backend)
     const runtime = await this.#start(selected)
     try {
+      if (typeof runtime[method] !== 'function') throw new Error(`installed MALT writer release does not support ${method}`)
       return await runtime[method](selected, ...args)
     } catch (error) {
       const active = this.#active
@@ -355,6 +356,12 @@ export class BrowserMaltWriterRouter {
     }
   }
 
+  prepareAuthentication(backend, stateJSON) {
+    return this.#call(backend, 'prepareAuthentication', [stateJSON])
+  }
+  updateAuthentication(backend, candidateJSON, stateJSON) {
+    return this.#call(backend, 'updateAuthentication', [candidateJSON, stateJSON])
+  }
   compute(backend, operationID, updateViewJSON, semanticIntentJSON) {
     return this.#call(backend, 'compute', [operationID, updateViewJSON, semanticIntentJSON])
   }

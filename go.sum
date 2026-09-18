@@ -7,6 +7,8 @@ github.com/crate-crypto/go-kzg-4844 v1.1.0/go.mod h1:JolLjpSff1tCCJKaJx4psrlEdlX
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/dewebprotocol/malt-core v0.0.9-RC.1 h1:4hkLq3qwBtfVg664moD36rCDljj9bjveCL4e706irkk=
+github.com/dewebprotocol/malt-core v0.0.9-RC.1.0.20260918152704-14ffc41ee51d h1:UUPrQLnDpuV7GRHuLh+7Ly6oJsNppocOFNeWqgjAD88=
+github.com/dewebprotocol/malt-core v0.0.9-RC.1.0.20260918152704-14ffc41ee51d/go.mod h1:o6L8K9vJp5hyrVo3fUtSsj0rvNpcboOcOb3nQwnR/gs=
 github.com/dewebprotocol/malt-core v0.0.9-RC.1/go.mod h1:o6L8K9vJp5hyrVo3fUtSsj0rvNpcboOcOb3nQwnR/gs=
 github.com/ipfs/go-cid v0.6.2 h1:VuGwJd+KJTaMJ4S4d5EEf9SXc17YUblS5axCbocn9YE=
 github.com/ipfs/go-cid v0.6.2/go.mod h1:Xhwg8NzHeK9xPCEZkCw4idzPiuNMpX3fARuI5Iwj1Lo=

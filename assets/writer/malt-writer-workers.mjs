@@ -339,6 +339,12 @@ export class MaltWriterWorker {
     });
   }
 
+  prepareAuthentication(backend, stateJSON) {
+    return this.#request(backend, 'prepareAuthentication', [stateJSON]);
+  }
+  updateAuthentication(backend, candidateJSON, stateJSON) {
+    return this.#request(backend, 'updateAuthentication', [candidateJSON, stateJSON]);
+  }
   compute(backend, operationID, updateViewJSON, semanticIntentJSON) {
     return this.#request(backend, "compute", [operationID, updateViewJSON, semanticIntentJSON]);
   }

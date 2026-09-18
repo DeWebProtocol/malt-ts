@@ -3,6 +3,8 @@
 const SUPPORTED_BACKENDS = new Set(["kzg", "ipa"]);
 const IPA_PROFILES = new Set(["direct", "compact", "fast"]);
 const RPC_FUNCTIONS = Object.freeze({
+ prepareAuthentication: "maltPrepareAuthentication",
+ updateAuthentication: "maltUpdateAuthentication",
   compute: "maltComputeClientRootV1",
   bootstrap: "maltWriterBootstrapSessionV1",
   load: "maltWriterLoadSessionV1",
@@ -138,6 +140,7 @@ async function initialize(message) {
     );
   }
   for (const functionName of Object.values(RPC_FUNCTIONS)) {
+    if (["maltPrepareAuthentication", "maltUpdateAuthentication"].includes(functionName)) continue;
     if (typeof globalThis[functionName] !== "function") {
       throw new Error(`MALT writer did not register ${functionName}`);
     }
@@ -163,6 +166,7 @@ async function handleRequest(message) {
   if (!Array.isArray(args)) {
     throw new Error("request args must be an array");
   }
+  if (typeof globalThis[functionName] !== "function") throw new Error(`loaded Core release does not support ${method}`);
   return globalThis[functionName](...args);
 }
 

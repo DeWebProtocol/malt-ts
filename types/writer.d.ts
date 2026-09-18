@@ -45,6 +45,10 @@ export declare class BrowserMaltWriterRouter {
   constructor(options: Record<string, unknown>)
   status(backend: MaltBackend): WriterStatus
   whenReady(backend: MaltBackend): Promise<unknown>
+  /** Compute a complete typed ArcSet candidate; never publishes or accepts it. */
+  prepareAuthentication(backend: MaltBackend, stateJSON: Uint8Array): Promise<string>
+  /** Verify the complete base and reuse unaffected authentication paths. */
+  updateAuthentication(backend: MaltBackend, candidateJSON: Uint8Array, stateJSON: Uint8Array): Promise<string>
   compute(backend: MaltBackend, operationID: Uint8Array, updateViewJSON: Uint8Array, semanticIntentJSON: Uint8Array): Promise<string>
   bootstrap(backend: MaltBackend): Promise<string>
   load(backend: MaltBackend, updateViewJSON: Uint8Array): Promise<string>
