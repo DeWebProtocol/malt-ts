@@ -118,7 +118,7 @@ go_toolchain="$(
 	"${go_command[@]}" version
 )"
 build_inputs_sha256="$(build_inputs_digest)"
-ipa_parameters_json="$("${repo_root}/scripts/read-core-ipa-parameters.sh" "${malt_module_dir}")"
+ipa_parameters_json="$("${repo_root}/scripts/read-core-ipa-parameters.sh" "${malt_module_dir}" "${go_binary}" local)"
 
 (
 	cd "${repo_root}"
