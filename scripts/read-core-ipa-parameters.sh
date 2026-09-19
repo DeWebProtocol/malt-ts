@@ -36,7 +36,9 @@ esac
 
 parameters_json="$(
 	cd "${source_dir}"
-	GOENV=off GOWORK=off GOFLAGS= GOTOOLCHAIN="${go_toolchain}" \
+	env -u GOROOT -u GOOS -u GOARCH GO111MODULE=on \
+		GOENV=off GOWORK=off GOFLAGS= GOTOOLCHAIN="${go_toolchain}" \
+		GOEXPERIMENT=none GOWASM= GOFIPS140=off CGO_ENABLED=0 \
 		"${go_binary}" run -mod=readonly ./cmd/malt-ipa-parameters
 )"
 

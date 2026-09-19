@@ -11,9 +11,9 @@ writer semantics independently in TypeScript.
 
 ## Version and Core release
 
-The package is currently `0.0.2-RC.1` and is built against the published
-`malt-core v0.0.9-RC.1` release at commit
-`5fb528ba82f69f9a0acc3df5affb74181c61c827`.
+The package is currently `0.0.2-rc.2` and is built against the published
+`malt-core v0.0.9-rc.2` release at commit
+`ccae498e29a323eb003b74fb12aa23b87bd13832`.
 [`malt-core.lock.json`](./malt-core.lock.json) binds that tag, commit, Go module
 checksums, formal Core WASM release manifest, and Core asset-set digests.
 
@@ -103,16 +103,15 @@ base64 bytes and decimal uint64 strings; this package performs no AA hashing
 or application path normalization. An unavailable ABI fails closed.
 
 The distributed verifier and writer assets are rebuilt from this package's ABI
-wrappers against the exact published Core `v0.0.9-RC.1` release. The verifier
+wrappers against the exact published Core `v0.0.9-rc.2` release. The verifier
 executes typed authentication through `maltVerifyAuthentication`; the internal
 writer ABI also supports `maltPrepareAuthentication`. Release provenance binds
-both exports. Those previously published assets use Core's v2 client-root
-corpus. This draft source uses the v3 transaction-ID corpus; historical v1/v2
-corpus bytes remain archived in Core.
+both exports. These assets use Core's v3 transaction-ID corpus; historical v1/v2 corpus
+bytes remain archived in Core.
 
 `make audit-core-release` verifies the canonical tag and published release
 manifest, and `make test-wasm` validates both legacy and typed contracts. The
-package version `0.0.2-RC.1` is independent of the locked Core version.
+package version `0.0.2-rc.2` is independent of the locked Core version.
 Root V stays zero throughout that process; a package release does not declare
 production readiness. Core's Root/input specification remains normative.
 
@@ -125,17 +124,9 @@ verifies the base and applies the Core typed writer. Inputs are UTF-8 JSON
 Candidates neither publish nor accept Roots. The request-selected
 `malt.authentication/1` verifier profile also supports proven early path absence.
 
-These source APIs require the corresponding Core release and regenerated WASM.
-The previous asset release fails closed when a new writer ABI is unavailable.
-Development builds must not replace the exact published asset provenance.
-
-This draft's Go source is pinned to Core commit
-`5e8b120682ffec9b8bf3005e068e56bca072f318` for standalone source validation.
-`malt-core.lock.json` and distributed WASM still identify the previously
-published release. Consequently release/asset consistency checks intentionally
-block packaging this draft until an approved Core release updates the lock and
-all reproducible assets together. Development builds in `/tmp` are not release
-artifacts and must not be substituted for the pinned distribution.
+The distributed assets include these writer APIs and bind the exact published
+Core release in `malt-core.lock.json`. Development builds must preserve this
+release provenance; temporary builds are not substitutes for the distribution.
 
 ### Transaction identity
 
@@ -144,5 +135,5 @@ Writer methods take `transactionID` bytes. The current Core contract uses
 and receipt profiles `/v2` and writer result profile `/v3`. Old operation-ID
 fields and result profiles are rejected rather than translated. Candidate
 computation and receipt acceptance do not publish an application head or grant
-client trust. Source conformance uses the v3 client-root corpus; release assets
-still require an exact published Core lock and matching checksums.
+client trust. Conformance and distributed assets use the v3 client-root corpus, with an exact
+published Core lock and matching checksums.
