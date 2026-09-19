@@ -76,7 +76,7 @@ func (c *computer) newSessionRuntimeWithStore(store *materializermemory.Store) (
 	return runtime, store, nil
 }
 
-func (c *computer) compute(ctx context.Context, operationID string, updateViewJSON, semanticIntentJSON []byte) ([]byte, error) {
+func (c *computer) compute(ctx context.Context, transactionID string, updateViewJSON, semanticIntentJSON []byte) ([]byte, error) {
 	if c == nil || len(c.schemes) == 0 {
 		return nil, fmt.Errorf("client writer is not initialized")
 	}
@@ -104,7 +104,7 @@ func (c *computer) compute(ctx context.Context, operationID string, updateViewJS
 	if err != nil {
 		return nil, fmt.Errorf("verify update view: %w", err)
 	}
-	result, err := runtime.ComputeBundle(ctx, operationID, verified, intent)
+	result, err := runtime.ComputeBundle(ctx, transactionID, verified, intent)
 	if err != nil {
 		return nil, fmt.Errorf("compute client root: %w", err)
 	}
@@ -193,7 +193,7 @@ func (s *sessionComputer) load(ctx context.Context, updateViewJSON []byte) (stri
 	return view.BaseRoot.String(), nil
 }
 
-func (s *sessionComputer) prepare(ctx context.Context, operationID string, semanticIntentJSON []byte) (string, error) {
+func (s *sessionComputer) prepare(ctx context.Context, transactionID string, semanticIntentJSON []byte) (string, error) {
 	if s == nil {
 		return "", fmt.Errorf("client writer session is not initialized")
 	}
@@ -202,8 +202,8 @@ func (s *sessionComputer) prepare(ctx context.Context, operationID string, seman
 	if s.session == nil {
 		return "", fmt.Errorf("client writer session has no update view")
 	}
-	if _, exists := s.prepared[operationID]; exists {
-		return "", fmt.Errorf("operation %q is already prepared", operationID)
+	if _, exists := s.prepared[transactionID]; exists {
+		return "", fmt.Errorf("operation %q is already prepared", transactionID)
 	}
 	if len(s.prepared) >= maxPreparedCandidates {
 		return "", fmt.Errorf("client writer session already retains %d prepared candidates", maxPreparedCandidates)
@@ -216,7 +216,7 @@ func (s *sessionComputer) prepare(ctx context.Context, operationID string, seman
 	if err != nil {
 		return "", err
 	}
-	result, err := s.session.Prepare(ctx, operationID, intent)
+	result, err := s.session.Prepare(ctx, transactionID, intent)
 	if err != nil {
 		s.retainMaterializedRoots()
 		return "", fmt.Errorf("prepare client writer session: %w", err)
@@ -237,12 +237,12 @@ func (s *sessionComputer) prepare(ctx context.Context, operationID string, seman
 			maxPreparedResponseBytes,
 		)
 	}
-	s.prepared[operationID] = preparedCandidate{result: result, encodedResult: fullResponse}
+	s.prepared[transactionID] = preparedCandidate{result: result, encodedResult: fullResponse}
 	s.preparedResponseBytes += len(fullResponse)
 	return result.Bundle.Candidate.String(), nil
 }
 
-func (s *sessionComputer) getPreparedResult(operationID string) ([]byte, error) {
+func (s *sessionComputer) getPreparedResult(transactionID string) ([]byte, error) {
 	if s == nil {
 		return nil, fmt.Errorf("client writer session is not initialized")
 	}
@@ -251,9 +251,9 @@ func (s *sessionComputer) getPreparedResult(operationID string) ([]byte, error) 
 	if s.session == nil {
 		return nil, fmt.Errorf("client writer session has no update view")
 	}
-	candidate, ok := s.prepared[operationID]
+	candidate, ok := s.prepared[transactionID]
 	if !ok {
-		return nil, fmt.Errorf("operation %q is not prepared", operationID)
+		return nil, fmt.Errorf("operation %q is not prepared", transactionID)
 	}
 	return append([]byte(nil), candidate.encodedResult...), nil
 }
@@ -275,7 +275,7 @@ func (s *sessionComputer) closeSession() {
 	s.preparedResponseBytes = 0
 }
 
-func (s *sessionComputer) acceptReceipt(operationID string, receiptJSON []byte) (string, error) {
+func (s *sessionComputer) acceptReceipt(transactionID string, receiptJSON []byte) (string, error) {
 	if s == nil {
 		return "", fmt.Errorf("client writer session is not initialized")
 	}
@@ -284,9 +284,9 @@ func (s *sessionComputer) acceptReceipt(operationID string, receiptJSON []byte) 
 	if s.session == nil {
 		return "", fmt.Errorf("client writer session has no update view")
 	}
-	candidate, ok := s.prepared[operationID]
+	candidate, ok := s.prepared[transactionID]
 	if !ok {
-		return "", fmt.Errorf("operation %q is not prepared", operationID)
+		return "", fmt.Errorf("operation %q is not prepared", transactionID)
 	}
 	prepared := candidate.result
 	wireReceipt, err := protocol.DecodeMaterializationReceipt(receiptJSON, prepared.Bundle)
@@ -312,7 +312,7 @@ func (s *sessionComputer) acceptReceipt(operationID string, receiptJSON []byte) 
 	return next.BaseRoot.String(), nil
 }
 
-func (s *sessionComputer) discard(operationID string) error {
+func (s *sessionComputer) discard(transactionID string) error {
 	if s == nil {
 		return fmt.Errorf("client writer session is not initialized")
 	}
@@ -321,11 +321,11 @@ func (s *sessionComputer) discard(operationID string) error {
 	if s.session == nil {
 		return fmt.Errorf("client writer session has no update view")
 	}
-	if _, ok := s.prepared[operationID]; !ok {
-		return fmt.Errorf("operation %q is not prepared", operationID)
+	if _, ok := s.prepared[transactionID]; !ok {
+		return fmt.Errorf("operation %q is not prepared", transactionID)
 	}
-	candidate := s.prepared[operationID]
-	delete(s.prepared, operationID)
+	candidate := s.prepared[transactionID]
+	delete(s.prepared, transactionID)
 	s.preparedResponseBytes -= len(candidate.encodedResult)
 	s.retainMaterializedRoots()
 	return nil

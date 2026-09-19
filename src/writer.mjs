@@ -362,8 +362,8 @@ export class BrowserMaltWriterRouter {
   updateAuthentication(backend, candidateJSON, stateJSON) {
     return this.#call(backend, 'updateAuthentication', [candidateJSON, stateJSON])
   }
-  compute(backend, operationID, updateViewJSON, semanticIntentJSON) {
-    return this.#call(backend, 'compute', [operationID, updateViewJSON, semanticIntentJSON])
+  compute(backend, transactionID, updateViewJSON, semanticIntentJSON) {
+    return this.#call(backend, 'compute', [transactionID, updateViewJSON, semanticIntentJSON])
   }
   async bootstrap(backend) {
     const result = await this.#call(backend, 'bootstrap', [])
@@ -383,19 +383,19 @@ export class BrowserMaltWriterRouter {
     this.#sessionBackend = backend
     return result
   }
-  prepare(backend, operationID, semanticIntentJSON) {
-    return this.#call(backend, 'prepare', [operationID, semanticIntentJSON])
+  prepare(backend, transactionID, semanticIntentJSON) {
+    return this.#call(backend, 'prepare', [transactionID, semanticIntentJSON])
   }
-  getPreparedResult(backend, operationID) {
-    return this.#call(backend, 'getPreparedResult', [operationID])
+  getPreparedResult(backend, transactionID) {
+    return this.#call(backend, 'getPreparedResult', [transactionID])
   }
   validateReceipt(backend, writerResultJSON, materializationReceiptJSON) {
     return this.#call(backend, 'validateReceipt', [writerResultJSON, materializationReceiptJSON])
   }
-  acceptReceipt(backend, operationID, materializationReceiptJSON) {
-    return this.#call(backend, 'acceptReceipt', [operationID, materializationReceiptJSON])
+  acceptReceipt(backend, transactionID, materializationReceiptJSON) {
+    return this.#call(backend, 'acceptReceipt', [transactionID, materializationReceiptJSON])
   }
-  discard(backend, operationID) { return this.#call(backend, 'discard', [operationID]) }
+  discard(backend, transactionID) { return this.#call(backend, 'discard', [transactionID]) }
   async closeSession(backend) {
     const selected = requireBackend(backend)
     const active = this.#active?.backend === selected ? this.#active : null

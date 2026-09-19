@@ -3,7 +3,7 @@ module github.com/dewebprotocol/malt-ts
 go 1.26.0
 
 require (
-	github.com/dewebprotocol/malt-core v0.0.9-RC.1.0.20260918152704-14ffc41ee51d
+	github.com/dewebprotocol/malt-core v0.0.9-RC.1.0.20260919011639-5e8b120682ff
 	github.com/ipfs/go-cid v0.6.2
 )
 

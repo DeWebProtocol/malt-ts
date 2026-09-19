@@ -49,16 +49,16 @@ export declare class BrowserMaltWriterRouter {
   prepareAuthentication(backend: MaltBackend, stateJSON: Uint8Array): Promise<string>
   /** Verify the complete base and reuse unaffected authentication paths. */
   updateAuthentication(backend: MaltBackend, candidateJSON: Uint8Array, stateJSON: Uint8Array): Promise<string>
-  compute(backend: MaltBackend, operationID: Uint8Array, updateViewJSON: Uint8Array, semanticIntentJSON: Uint8Array): Promise<string>
+  compute(backend: MaltBackend, transactionID: Uint8Array, updateViewJSON: Uint8Array, semanticIntentJSON: Uint8Array): Promise<string>
   bootstrap(backend: MaltBackend): Promise<string>
   load(backend: MaltBackend, updateViewJSON: Uint8Array): Promise<string>
   snapshot(backend: MaltBackend, checkpointKey: Uint8Array): Promise<string>
   restore(backend: MaltBackend, snapshotJSON: Uint8Array, checkpointKey: Uint8Array): Promise<string>
-  prepare(backend: MaltBackend, operationID: Uint8Array, semanticIntentJSON: Uint8Array): Promise<string>
-  getPreparedResult(backend: MaltBackend, operationID: Uint8Array): Promise<string>
+  prepare(backend: MaltBackend, transactionID: Uint8Array, semanticIntentJSON: Uint8Array): Promise<string>
+  getPreparedResult(backend: MaltBackend, transactionID: Uint8Array): Promise<string>
   validateReceipt(backend: MaltBackend, writerResultJSON: Uint8Array, materializationReceiptJSON: Uint8Array): Promise<string>
-  acceptReceipt(backend: MaltBackend, operationID: Uint8Array, materializationReceiptJSON: Uint8Array): Promise<string>
-  discard(backend: MaltBackend, operationID: Uint8Array): Promise<string>
+  acceptReceipt(backend: MaltBackend, transactionID: Uint8Array, materializationReceiptJSON: Uint8Array): Promise<string>
+  discard(backend: MaltBackend, transactionID: Uint8Array): Promise<string>
   closeSession(backend: MaltBackend): Promise<void>
   terminateBackend(backend: MaltBackend): void
   terminateAll(): void

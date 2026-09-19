@@ -26,7 +26,7 @@ for runner in run-writer-wasm-smoke.mjs run-writer-worker-smoke.mjs; do
 		exit 1
 	}
 done
-fixtures="${malt_module_dir}/conformance/client-root/v2/vectors.json"
+fixtures="${malt_module_dir}/conformance/client-root/v3/vectors.json"
 [[ -s "${fixtures}" ]] || {
 	printf 'pinned MALT module is missing the client-root conformance corpus: %s\n' \
 		"${fixtures}" >&2
