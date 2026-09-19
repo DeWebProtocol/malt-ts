@@ -106,11 +106,43 @@ The distributed verifier and writer assets are rebuilt from this package's ABI
 wrappers against the exact published Core `v0.0.9-RC.1` release. The verifier
 executes typed authentication through `maltVerifyAuthentication`; the internal
 writer ABI also supports `maltPrepareAuthentication`. Release provenance binds
-both exports. Current V0 client-root conformance uses Core's v2 corpus, while
-Core retains its historical v1 corpus independently.
+both exports. Those previously published assets use Core's v2 client-root
+corpus. This draft source uses the v3 transaction-ID corpus; historical v1/v2
+corpus bytes remain archived in Core.
 
 `make audit-core-release` verifies the canonical tag and published release
 manifest, and `make test-wasm` validates both legacy and typed contracts. The
 package version `0.0.2-RC.1` is independent of the locked Core version.
 Root V stays zero throughout that process; a package release does not declare
 production readiness. Core's Root/input specification remains normative.
+
+### Typed ArcSet writer candidates
+
+`writer.prepareAuthentication(backend, stateJSON)` creates a complete typed
+candidate. `writer.updateAuthentication(backend, candidateJSON, stateJSON)`
+verifies the base and applies the Core typed writer. Inputs are UTF-8 JSON
+`Uint8Array`s; returned JSON follows Core's authentication candidate schema.
+Candidates neither publish nor accept Roots. The request-selected
+`malt.authentication/1` verifier profile also supports proven early path absence.
+
+These source APIs require the corresponding Core release and regenerated WASM.
+The previous asset release fails closed when a new writer ABI is unavailable.
+Development builds must not replace the exact published asset provenance.
+
+This draft's Go source is pinned to Core commit
+`5e8b120682ffec9b8bf3005e068e56bca072f318` for standalone source validation.
+`malt-core.lock.json` and distributed WASM still identify the previously
+published release. Consequently release/asset consistency checks intentionally
+block packaging this draft until an approved Core release updates the lock and
+all reproducible assets together. Development builds in `/tmp` are not release
+artifacts and must not be substituted for the pinned distribution.
+
+### Transaction identity
+
+Writer methods take `transactionID` bytes. The current Core contract uses
+`TransactionID` in Go and `transaction_id` in bundle/receipt JSON, with bundle
+and receipt profiles `/v2` and writer result profile `/v3`. Old operation-ID
+fields and result profiles are rejected rather than translated. Candidate
+computation and receipt acceptance do not publish an application head or grant
+client trust. Source conformance uses the v3 client-root corpus; release assets
+still require an exact published Core lock and matching checksums.

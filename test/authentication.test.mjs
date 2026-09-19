@@ -34,3 +34,16 @@ describe('typed authentication bridge', () => {
     }
   })
 })
+
+it('binds path absence to the new request profile without reinterpreting steps', async () => {
+  const profile = 'malt.authentication/1'
+  const q = { ...request, profile, operation: 'resolve', input: undefined,
+    steps: [{ kind: 'label', data: 'bWlzc2luZw==' }] }
+  const proof = { profile, resolved: '', absent_step: '0', traversal: { results: [] } }
+  const provider = { authentication: async (json) => {
+    expect(JSON.parse(json).request.profile).toBe(profile)
+    return JSON.stringify({ profile, valid: true })
+  } }
+  expect((await verifyAuthenticationLocally({ request: q, result: proof, provider })).valid).toBe(true)
+  expect((await verifyAuthenticationLocally({ request: q, result, provider })).valid).toBe(false)
+})

@@ -28,4 +28,26 @@ func registerAuthenticationWriter(writer *computer, initErr error) {
 		})
 	})
 	js.Global().Set("maltPrepareAuthentication", f)
+	update := js.FuncOf(func(_ js.Value, args []js.Value) any {
+		promise := js.Global().Get("Promise")
+		if initErr != nil {
+			return promise.Call("reject", initErr.Error())
+		}
+		if len(args) != 2 {
+			return promise.Call("reject", "maltUpdateAuthentication expects candidate and state JSON Uint8Arrays")
+		}
+		base, err := copyBoundedBytes(args[0], "authentication candidate", protocol.MaxVerificationJSONBytes)
+		if err != nil {
+			return promise.Call("reject", err.Error())
+		}
+		state, err := copyBoundedBytes(args[1], "authentication state", protocol.MaxVerificationJSONBytes)
+		if err != nil {
+			return promise.Call("reject", err.Error())
+		}
+		return promiseString(func() (string, error) {
+			result, err := writer.updateAuthentication(context.Background(), base, state)
+			return string(result), err
+		})
+	})
+	js.Global().Set("maltUpdateAuthentication", update)
 }

@@ -339,8 +339,14 @@ export class MaltWriterWorker {
     });
   }
 
-  compute(backend, operationID, updateViewJSON, semanticIntentJSON) {
-    return this.#request(backend, "compute", [operationID, updateViewJSON, semanticIntentJSON]);
+  prepareAuthentication(backend, stateJSON) {
+    return this.#request(backend, 'prepareAuthentication', [stateJSON]);
+  }
+  updateAuthentication(backend, candidateJSON, stateJSON) {
+    return this.#request(backend, 'updateAuthentication', [candidateJSON, stateJSON]);
+  }
+  compute(backend, transactionID, updateViewJSON, semanticIntentJSON) {
+    return this.#request(backend, "compute", [transactionID, updateViewJSON, semanticIntentJSON]);
   }
   bootstrap(backend) { return this.#request(backend, "bootstrap", []); }
   load(backend, updateViewJSON) {
@@ -360,19 +366,19 @@ export class MaltWriterWorker {
   restore(backend, snapshotJSON, checkpointKey) {
     return this.#request(backend, "restore", [snapshotJSON, checkpointKey]);
   }
-  prepare(backend, operationID, semanticIntentJSON) {
-    return this.#request(backend, "prepare", [operationID, semanticIntentJSON]);
+  prepare(backend, transactionID, semanticIntentJSON) {
+    return this.#request(backend, "prepare", [transactionID, semanticIntentJSON]);
   }
-  getPreparedResult(backend, operationID) {
-    return this.#request(backend, "getPreparedResult", [operationID]);
+  getPreparedResult(backend, transactionID) {
+    return this.#request(backend, "getPreparedResult", [transactionID]);
   }
   validateReceipt(backend, writerResultJSON, materializationReceiptJSON) {
     return this.#request(backend, "validateReceipt", [writerResultJSON, materializationReceiptJSON]);
   }
-  acceptReceipt(backend, operationID, materializationReceiptJSON) {
-    return this.#request(backend, "acceptReceipt", [operationID, materializationReceiptJSON]);
+  acceptReceipt(backend, transactionID, materializationReceiptJSON) {
+    return this.#request(backend, "acceptReceipt", [transactionID, materializationReceiptJSON]);
   }
-  discard(backend, operationID) { return this.#request(backend, "discard", [operationID]); }
+  discard(backend, transactionID) { return this.#request(backend, "discard", [transactionID]); }
   closeSession(backend) {
     return this.#request(backend, "closeSession", []).then(() => undefined);
   }

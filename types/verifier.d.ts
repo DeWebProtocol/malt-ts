@@ -75,7 +75,7 @@ export type AuthenticationInput =
   | { kind: 'key'; data: string }
   | { kind: 'label'; data: string }
 export interface AuthenticationRequest extends JSONRecord {
-  profile: 'malt.authentication/0'
+  profile: 'malt.authentication/0' | 'malt.authentication/1'
   root: string
   steps?: AuthenticationInput[] | null
   operation: 'resolve' | 'binding' | 'range'
@@ -84,6 +84,7 @@ export interface AuthenticationRequest extends JSONRecord {
   end?: string
 }
 export declare const authenticationVerifierProfile: 'malt.authentication/0'
+export declare const authenticationPathVerifierProfile: 'malt.authentication/1'
 export declare function createAuthenticationVerification(options: {
   request: AuthenticationRequest; result: JSONRecord
 }): JSONRecord
