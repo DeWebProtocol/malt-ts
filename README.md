@@ -11,9 +11,9 @@ writer semantics independently in TypeScript.
 
 ## Version and Core release
 
-The published asset binding is currently `0.0.2-rc.2`, built against the published
-`malt-core v0.0.9-rc.2` release at commit
-`ccae498e29a323eb003b74fb12aa23b87bd13832`.
+The package asset binding is `0.0.2-rc.3`, built against the published
+`malt-core v0.0.9-rc.3` release at commit
+`a4526f8751db403eaa2e1a7ac6add00b70ff2933`.
 [`malt-core.lock.json`](./malt-core.lock.json) binds that tag, commit, Go module
 checksums, formal Core WASM release manifest, and Core asset-set digests.
 
@@ -103,15 +103,15 @@ base64 bytes and decimal uint64 strings; this package performs no AA hashing
 or application path normalization. An unavailable ABI fails closed.
 
 The distributed verifier and writer assets are rebuilt from this package's ABI
-wrappers against the exact published Core `v0.0.9-rc.2` release. The verifier
+wrappers against the exact published Core `v0.0.9-rc.3` release. The verifier
 executes typed authentication through `maltVerifyAuthentication`; the internal
 writer ABI also supports `maltPrepareAuthentication`. Release provenance binds
-both exports. These assets use Core's v3 transaction-ID corpus; historical v1/v2 corpus
-bytes remain archived in Core.
+both exports. These assets use Core's client-root v4, Resolve/Read v3, Map-proof v2, and
+authentication/0 corpora; historical corpus bytes remain in Core Git history.
 
 `make audit-core-release` verifies the canonical tag and published release
-manifest, and `make test-wasm` validates both legacy and typed contracts. The
-package version `0.0.2-rc.2` is independent of the locked Core version.
+manifest, and `make test-wasm` validates both semantic and typed contracts. The
+package version `0.0.2-rc.3` is independent of the locked Core version.
 Root V stays zero throughout that process; a package release does not declare
 production readiness. Core's Root/input specification remains normative.
 
@@ -128,9 +128,9 @@ The distributed assets include these writer APIs and bind the exact published
 Core release in `malt-core.lock.json`. Development builds must preserve this
 release provenance; temporary builds are not substitutes for the distribution.
 
-### Retained authentication sessions (source integration)
+### Retained authentication sessions
 
-The source API adds `createAuthentication`, `importAuthentication`,
+The API provides `createAuthentication`, `importAuthentication`,
 `applyAuthentication`, `exportAuthentication`, `discardAuthentication` and
 `closeAuthentication`. The first two retain a Core-owned writer and return
 JSON `{handle, root}` with an opaque handle bound to this router and Worker.
@@ -162,12 +162,9 @@ limits and checkpoint coordination. This package owns the Worker lifecycle,
 backend routing and browser ABI. Worker readiness now requires every current
 export; an incomplete runtime fails during initialization.
 
-This source integration depends on [Core PR #203](https://github.com/DeWebProtocol/malt-core/pull/203). The
-published lock and binary assets have deliberately not been relabeled as that
-unreleased implementation. **This branch is not releasable or merge-ready until
-the Core change is released, the exact release lock is updated, and the assets
-are rebuilt and verified.** The unchanged release checks continue to enforce
-that requirement.
+These APIs and the distributed assets are bound to published Core `v0.0.9-rc.3`
+through the reviewed lock. Formal release auditing, complete ABI checks, and
+verifier/writer conformance validate the exact Core and package asset sets.
 
 To validate both source checkouts without changing the release binding, run
 under the workspace CPU scope:

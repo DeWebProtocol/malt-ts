@@ -1,9 +1,9 @@
-export const maltTSVersion = '0.0.2-rc.2'
+export const maltTSVersion = '0.0.2-rc.3'
 
 export const maltCoreRelease = Object.freeze({
-  version: 'v0.0.9-rc.2',
-  commit: 'ccae498e29a323eb003b74fb12aa23b87bd13832',
-  manifestSHA256: '6fe0b21435beea89a5a2f2d90668312ed43db5050a5f66ccc34e65c135ab6b1a',
-  verifierAssetSetSHA256: 'c0908a8080970c1834f32d37c6fa07bb46112afff1834f09ba326082a05db95c',
-  writerAssetSetSHA256: 'ab30b8637dcacc81ad63ea716b68506694bc9fe216b3090c92b5211b170b9e1f'
+  version: 'v0.0.9-rc.3',
+  commit: 'a4526f8751db403eaa2e1a7ac6add00b70ff2933',
+  manifestSHA256: '2189b808f0eaf3673cbeeee1fcb6a72252294ad117f37ec56af47ec0a0fab131',
+  verifierAssetSetSHA256: '2a61de371a8e71f69f7b9b0552070fcda592b941554dd1a452dabc99149594f4',
+  writerAssetSetSHA256: '1f644caaf0de748df433f06e99a77f4f589469f22f7f8486e4227a90619b021b'
 })
