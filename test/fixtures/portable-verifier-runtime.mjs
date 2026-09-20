@@ -8,6 +8,7 @@ globalThis.Go = class {
     globalThis.maltVerifyRead = () => '{"profile":"malt.read/v0alpha1","valid":true}'
     globalThis.maltVerifyMapProof = () => '{"profile":"malt.map-proof/v0alpha1","valid":true}'
     globalThis.maltVerifyAuthentication = () => '{"profile":"malt.authentication/0","valid":true}'
+    globalThis.maltVerifierReady = true
     return new Promise(() => {})
   }
 }

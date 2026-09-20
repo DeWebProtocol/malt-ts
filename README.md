@@ -11,9 +11,9 @@ writer semantics independently in TypeScript.
 
 ## Version and Core release
 
-The package is currently `0.0.2-rc.2` and is built against the published
-`malt-core v0.0.9-rc.2` release at commit
-`ccae498e29a323eb003b74fb12aa23b87bd13832`.
+The package asset binding is `0.0.2-rc.3`, built against the published
+`malt-core v0.0.9-rc.3` release at commit
+`a4526f8751db403eaa2e1a7ac6add00b70ff2933`.
 [`malt-core.lock.json`](./malt-core.lock.json) binds that tag, commit, Go module
 checksums, formal Core WASM release manifest, and Core asset-set digests.
 
@@ -103,15 +103,15 @@ base64 bytes and decimal uint64 strings; this package performs no AA hashing
 or application path normalization. An unavailable ABI fails closed.
 
 The distributed verifier and writer assets are rebuilt from this package's ABI
-wrappers against the exact published Core `v0.0.9-rc.2` release. The verifier
+wrappers against the exact published Core `v0.0.9-rc.3` release. The verifier
 executes typed authentication through `maltVerifyAuthentication`; the internal
 writer ABI also supports `maltPrepareAuthentication`. Release provenance binds
-both exports. These assets use Core's v3 transaction-ID corpus; historical v1/v2 corpus
-bytes remain archived in Core.
+both exports. These assets use Core's client-root v4, Resolve/Read v3, Map-proof v2, and
+authentication/0 corpora; historical corpus bytes remain in Core Git history.
 
 `make audit-core-release` verifies the canonical tag and published release
-manifest, and `make test-wasm` validates both legacy and typed contracts. The
-package version `0.0.2-rc.2` is independent of the locked Core version.
+manifest, and `make test-wasm` validates both semantic and typed contracts. The
+package version `0.0.2-rc.3` is independent of the locked Core version.
 Root V stays zero throughout that process; a package release does not declare
 production readiness. Core's Root/input specification remains normative.
 
@@ -127,6 +127,57 @@ Candidates neither publish nor accept Roots. The request-selected
 The distributed assets include these writer APIs and bind the exact published
 Core release in `malt-core.lock.json`. Development builds must preserve this
 release provenance; temporary builds are not substitutes for the distribution.
+
+### Retained authentication sessions
+
+The API provides `createAuthentication`, `importAuthentication`,
+`applyAuthentication`, `exportAuthentication`, `discardAuthentication` and
+`closeAuthentication`. The first two retain a Core-owned writer and return
+JSON `{handle, root}` with an opaque handle bound to this router and Worker.
+Apply takes handle bytes plus a
+`malt.authentication-delta/0` JSON delta and returns a new independent handle.
+Export explicitly returns a complete candidate; updates do not resend or
+export the base state. Handles are scoped to the selected backend Worker and
+are rejected after discard, close, or Worker termination. Pending requests
+are cancelled on termination or fatal runtime loss. A retained session
+pins its backend until `closeAuthentication`; closing the client-root session
+does not release that pin. Initial creation and close/create operations are
+serialized so concurrent backend requests cannot discard retained state.
+
+```ts
+const encode = (value: unknown) => new TextEncoder().encode(JSON.stringify(value))
+const handleBytes = (handle: string) => new TextEncoder().encode(handle)
+const base = JSON.parse(await writer.createAuthentication('kzg', encode(state)))
+const next = JSON.parse(await writer.applyAuthentication('kzg', handleBytes(base.handle), encode({
+  profile: 'malt.authentication-delta/0',
+  changes: [{ input: { kind: 'index', number: '0' }, before: oldCID, after: newCID }]
+})))
+const candidate = JSON.parse(await writer.exportAuthentication('kzg', handleBytes(next.handle)))
+await writer.discardAuthentication('kzg', handleBytes(base.handle))
+await writer.closeAuthentication('kzg')
+```
+
+Core owns the input interpretation, authentication tree, immutable state,
+limits and checkpoint coordination. This package owns the Worker lifecycle,
+backend routing and browser ABI. Worker readiness now requires every current
+export; an incomplete runtime fails during initialization.
+
+These APIs and the distributed assets are bound to published Core `v0.0.9-rc.3`
+through the reviewed lock. Formal release auditing, complete ABI checks, and
+verifier/writer conformance validate the exact Core and package asset sets.
+
+To validate both source checkouts without changing the release binding, run
+under the workspace CPU scope:
+
+```bash
+./scripts/test-core-source.sh /absolute/path/to/core-checkout /tmp/malt-ts-source-wasm
+```
+
+The script requires a new empty output directory, uses a temporary Go
+workspace and places diagnostic builds outside
+`assets/`. It runs native tests, frozen Core conformance, retained-writer and
+checkpoint tests, and a real Worker smoke test. Its output is not a package
+release or evidence of published provenance.
 
 ### Transaction identity
 

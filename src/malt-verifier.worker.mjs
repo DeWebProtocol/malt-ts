@@ -99,9 +99,6 @@ async function verify({ id, kind, json }) {
 function selectVerifier(kind) {
   switch (kind) {
     case 'authentication':
-      if (typeof globalThis.maltVerifyAuthentication !== 'function') {
-        throw new Error('loaded Core release does not support malt.authentication/0')
-      }
       return globalThis.maltVerifyAuthentication
     case 'resolve':
       return globalThis.maltVerifyResolve
@@ -116,11 +113,7 @@ function selectVerifier(kind) {
 
 async function waitForProvider() {
   const deadline = Date.now() + 120_000
-  while (
-    typeof globalThis.maltVerifyResolve !== "function" ||
-    typeof globalThis.maltVerifyRead !== "function" ||
-    typeof globalThis.maltVerifyMapProof !== "function"
-  ) {
+  while (!globalThis.maltVerifierReady) {
     if (runtimeFailure) throw new Error(`Go WASM runtime failed: ${runtimeFailure}`)
     if (globalThis.maltVerifierInitError) {
       throw new Error(`local verifier initialization failed: ${globalThis.maltVerifierInitError}`)
@@ -128,6 +121,10 @@ async function waitForProvider() {
     if (Date.now() >= deadline) throw new Error('local verifier initialization timed out')
     await new Promise((resolve) => setTimeout(resolve, 10))
   }
+  for (const name of ['maltVerifyAuthentication', 'maltVerifyResolve', 'maltVerifyRead', 'maltVerifyMapProof']) {
+    if (typeof globalThis[name] !== 'function') throw new Error(`local verifier did not register ${name}`)
+  }
+
   if (globalThis.maltVerifierInitError) {
     throw new Error(`local verifier initialization failed: ${globalThis.maltVerifierInitError}`)
   }

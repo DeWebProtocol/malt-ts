@@ -17,8 +17,30 @@ const expectedParameters = Object.freeze(structuredClone(releasedProvenance.para
 const expectedCore = Object.freeze(structuredClone(releasedProvenance.core))
 const expectedBuildInputs = releasedProvenance.build_inputs_sha256
 
+// Preserve the published metadata as a fixture, but test the new source ABI.
+// This synthetic fixture is not written into distributed asset provenance.
 function cloneProvenance() {
-  return structuredClone(releasedProvenance)
+  return { ...structuredClone(releasedProvenance), exports: [
+    'maltApplyAuthentication',
+    'maltCloseAuthentication',
+    'maltComputeClientRootV1',
+    'maltCreateAuthentication',
+    'maltDiscardAuthentication',
+    'maltExportAuthentication',
+    'maltImportAuthentication',
+    'maltPrepareAuthentication',
+    'maltUpdateAuthentication',
+    'maltWriterAcceptSessionReceiptV1',
+    'maltWriterBootstrapSessionV1',
+    'maltWriterCloseSessionV1',
+    'maltWriterDiscardSessionCandidateV1',
+    'maltWriterGetPreparedResultV1',
+    'maltWriterLoadSessionV1',
+    'maltWriterPrepareSessionV1',
+    'maltWriterRestoreSessionV1',
+    'maltWriterSnapshotSessionV1',
+    'maltWriterValidateReceiptV1'
+  ] }
 }
 
 function checksumManifestFor(provenanceContents) {
@@ -56,7 +78,7 @@ function expectRehashedTamperRejected(mutate, messagePattern) {
 }
 
 describe('writer build provenance release gate', () => {
-  it('accepts the released writer build contract', () => {
+  it('accepts the current writer build contract', () => {
     expect(() =>
       validateWriterProvenance(
         cloneProvenance(),
@@ -66,6 +88,14 @@ describe('writer build provenance release gate', () => {
       )
     ).not.toThrow()
   })
+
+  it.each(['maltPrepareAuthentication', 'maltUpdateAuthentication', 'maltApplyAuthentication'])(
+    'rejects a rehashed manifest missing the current %s export', name => {
+      expectRehashedTamperRejected(provenance => {
+        provenance.exports = provenance.exports.filter(value => value !== name)
+      }, /writer exports/)
+    }
+  )
 
   it.each([
     [

@@ -20,8 +20,8 @@ if [[ -z "${malt_version}" || ! "${malt_commit}" =~ ^[0-9a-f]{40}$ || \
 fi
 
 runner="${malt_module_dir}/scripts/run-verifier-wasm-vectors.mjs"
-vectors="${malt_module_dir}/conformance/resolve-read/v2/vectors.json"
-map_proof_vectors="${malt_module_dir}/conformance/map-proof/v1/vectors.json"
+vectors="${malt_module_dir}/conformance/resolve-read/v3/vectors.json"
+map_proof_vectors="${malt_module_dir}/conformance/map-proof/v2/vectors.json"
 for source_file in "${runner}" "${vectors}" "${map_proof_vectors}"; do
 	if [[ ! -f "${source_file}" ]]; then
 		printf 'pinned MALT module is missing verifier conformance input: %s\n' \

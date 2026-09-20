@@ -49,6 +49,14 @@ export declare class BrowserMaltWriterRouter {
   prepareAuthentication(backend: MaltBackend, stateJSON: Uint8Array): Promise<string>
   /** Verify the complete base and reuse unaffected authentication paths. */
   updateAuthentication(backend: MaltBackend, candidateJSON: Uint8Array, stateJSON: Uint8Array): Promise<string>
+  /** Start a retained writer and return JSON {handle, root}; full state is exported separately. */
+  createAuthentication(backend: MaltBackend, stateJSON: Uint8Array): Promise<string>
+  importAuthentication(backend: MaltBackend, candidateJSON: Uint8Array): Promise<string>
+  /** Handle arguments are UTF-8 bytes of the opaque handle returned by this router. */
+  applyAuthentication(backend: MaltBackend, handle: Uint8Array, deltaJSON: Uint8Array): Promise<string>
+  exportAuthentication(backend: MaltBackend, handle: Uint8Array): Promise<string>
+  discardAuthentication(backend: MaltBackend, handle: Uint8Array): Promise<string>
+  closeAuthentication(backend: MaltBackend): Promise<string>
   compute(backend: MaltBackend, transactionID: Uint8Array, updateViewJSON: Uint8Array, semanticIntentJSON: Uint8Array): Promise<string>
   bootstrap(backend: MaltBackend): Promise<string>
   load(backend: MaltBackend, updateViewJSON: Uint8Array): Promise<string>

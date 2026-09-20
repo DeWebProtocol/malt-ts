@@ -11,7 +11,7 @@ export interface BrowserVerifierProvider {
   resolve(json: string, signal?: AbortSignal): Promise<string>
   read(json: string, signal?: AbortSignal): Promise<string>
   mapProof(json: string, signal?: AbortSignal): Promise<string>
-  authentication?(json: string, signal?: AbortSignal): Promise<string>
+  authentication(json: string, signal?: AbortSignal): Promise<string>
   terminate(): void
 }
 
