@@ -19,14 +19,14 @@ if [[ -z "${malt_version}" || ! -d "${malt_module_dir}" ]]; then
 	exit 1
 fi
 
-for runner in run-writer-wasm-smoke.mjs run-writer-worker-smoke.mjs; do
+for runner in run-writer-wasm-smoke.mjs run-writer-worker-smoke.mjs run-authentication-wasm.mjs run-retained-writer-wasm.mjs; do
 	[[ -f "${malt_module_dir}/scripts/${runner}" ]] || {
 		printf 'pinned MALT module is missing writer conformance runner: %s\n' \
 			"${runner}" >&2
 		exit 1
 	}
 done
-fixtures="${malt_module_dir}/conformance/client-root/v3/vectors.json"
+fixtures="${malt_module_dir}/conformance/client-root/v4/vectors.json"
 [[ -s "${fixtures}" ]] || {
 	printf 'pinned MALT module is missing the client-root conformance corpus: %s\n' \
 		"${fixtures}" >&2
@@ -45,6 +45,8 @@ node "${malt_module_dir}/scripts/run-authentication-wasm.mjs" writer \
 node "${repo_root}/scripts/run-writer-snapshot-smoke.mjs" \
 	"${writer_root}/malt-writer-kzg.wasm" \
 	"${writer_root}/wasm_exec.js" kzg
+node "${malt_module_dir}/scripts/run-retained-writer-wasm.mjs" \
+ "${writer_root}/malt-writer-kzg.wasm" "${writer_root}/wasm_exec.js" kzg
 for profile in direct compact fast; do
 	node "${malt_module_dir}/scripts/run-writer-wasm-smoke.mjs" \
 		"${writer_root}/malt-writer-ipa-${profile}.wasm" \
@@ -52,6 +54,8 @@ for profile in direct compact fast; do
 	node "${malt_module_dir}/scripts/run-authentication-wasm.mjs" writer \
 		"${writer_root}/malt-writer-ipa-${profile}.wasm" "${writer_root}/wasm_exec.js" \
 		"${malt_module_dir}/conformance/authentication-v0.json" ipa
+ node "${malt_module_dir}/scripts/run-retained-writer-wasm.mjs" \
+  "${writer_root}/malt-writer-ipa-${profile}.wasm" "${writer_root}/wasm_exec.js" ipa "${profile}"
 done
 node "${repo_root}/scripts/run-writer-snapshot-smoke.mjs" \
 	"${writer_root}/malt-writer-ipa-compact.wasm" \
@@ -62,4 +66,5 @@ node "${malt_module_dir}/scripts/run-writer-worker-smoke.mjs" \
 	"${writer_root}/malt-writer-workers.mjs" \
 	"${writer_root}/malt-writer-worker.mjs" \
 	"${fixtures}" ipa compact
+node "${repo_root}/scripts/run-authentication-router-smoke.mjs" "${writer_root}" "${malt_module_dir}/scripts/run-writer-worker-node.mjs"
 printf 'malt-ts writer passes MALT %s conformance.\n' "${malt_version}"

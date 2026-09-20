@@ -3,8 +3,14 @@
 const SUPPORTED_BACKENDS = new Set(["kzg", "ipa"]);
 const IPA_PROFILES = new Set(["direct", "compact", "fast"]);
 const RPC_FUNCTIONS = Object.freeze({
- prepareAuthentication: "maltPrepareAuthentication",
- updateAuthentication: "maltUpdateAuthentication",
+  closeAuthentication: "maltCloseAuthentication",
+  discardAuthentication: "maltDiscardAuthentication",
+  exportAuthentication: "maltExportAuthentication",
+  applyAuthentication: "maltApplyAuthentication",
+  importAuthentication: "maltImportAuthentication",
+  createAuthentication: "maltCreateAuthentication",
+  prepareAuthentication: "maltPrepareAuthentication",
+  updateAuthentication: "maltUpdateAuthentication",
   compute: "maltComputeClientRootV1",
   bootstrap: "maltWriterBootstrapSessionV1",
   load: "maltWriterLoadSessionV1",
@@ -18,6 +24,12 @@ const RPC_FUNCTIONS = Object.freeze({
   closeSession: "maltWriterCloseSessionV1",
 });
 const STATEFUL_RPC_METHODS = new Set([
+  "createAuthentication",
+  "importAuthentication",
+  "applyAuthentication",
+  "exportAuthentication",
+  "discardAuthentication",
+  "closeAuthentication",
   "bootstrap",
   "load",
   "snapshot",
@@ -140,7 +152,6 @@ async function initialize(message) {
     );
   }
   for (const functionName of Object.values(RPC_FUNCTIONS)) {
-    if (["maltPrepareAuthentication", "maltUpdateAuthentication"].includes(functionName)) continue;
     if (typeof globalThis[functionName] !== "function") {
       throw new Error(`MALT writer did not register ${functionName}`);
     }

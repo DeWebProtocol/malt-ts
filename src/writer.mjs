@@ -76,6 +76,14 @@ function fallbackProfiles(selected) {
 function validateRuntime(runtime) {
   if (
     !runtime ||
+    typeof runtime.prepareAuthentication !== 'function' ||
+    typeof runtime.updateAuthentication !== 'function' ||
+    typeof runtime.createAuthentication !== 'function' ||
+    typeof runtime.importAuthentication !== 'function' ||
+    typeof runtime.applyAuthentication !== 'function' ||
+    typeof runtime.exportAuthentication !== 'function' ||
+    typeof runtime.discardAuthentication !== 'function' ||
+    typeof runtime.closeAuthentication !== 'function' ||
     typeof runtime.compute !== 'function' ||
     typeof runtime.load !== 'function' ||
     typeof runtime.snapshot !== 'function' ||
@@ -107,6 +115,12 @@ export class BrowserMaltWriterRouter {
   #active = null
   #loading = null
   #sessionBackend = ''
+  #authenticationBackend = ''
+  #authenticationRetained = false
+  #authenticationPending = 0
+  #authenticationQueue = Promise.resolve()
+  #authenticationEpoch = {}
+  #authenticationHandles = new Map()
   #terminated = false
   #states = new Map([
     ['kzg', Object.freeze({ backend: 'kzg', state: 'idle', profile: '' })],
@@ -148,6 +162,7 @@ export class BrowserMaltWriterRouter {
       : new Error(String(error || `${active.backend} writer runtime failed`))
     this.#active = null
     if (this.#sessionBackend === active.backend) this.#sessionBackend = ''
+    this.#resetAuthentication(active.backend)
     try {
       active.runtime.terminate()
     } catch {
@@ -217,6 +232,9 @@ export class BrowserMaltWriterRouter {
     }
     if (this.#sessionBackend && this.#sessionBackend !== backend) {
       throw new Error(`cannot switch from ${this.#sessionBackend} while its writer session is active`)
+    }
+    if (this.#authenticationBackend && this.#authenticationBackend !== backend) {
+      throw new Error(`cannot switch from ${this.#authenticationBackend} while its authentication session is active`)
     }
     if (this.#loading?.backend === backend) return this.#loading.promise
     if (this.#loading) {
@@ -343,9 +361,10 @@ export class BrowserMaltWriterRouter {
 
   async whenReady(backend) { return this.#start(requireBackend(backend)) }
 
-  async #call(backend, method, args) {
+  async #call(backend, method, args, current) {
     const selected = requireBackend(backend)
     const runtime = await this.#start(selected)
+    if (current && !current(runtime)) throw new Error('authentication Worker session was lost')
     try {
       if (typeof runtime[method] !== 'function') throw new Error(`installed MALT writer release does not support ${method}`)
       return await runtime[method](selected, ...args)
@@ -361,6 +380,97 @@ export class BrowserMaltWriterRouter {
   }
   updateAuthentication(backend, candidateJSON, stateJSON) {
     return this.#call(backend, 'updateAuthentication', [candidateJSON, stateJSON])
+  }
+  #resetAuthentication(backend) {
+    if (this.#authenticationBackend !== backend) return
+    this.#authenticationEpoch = {}
+    this.#authenticationHandles.clear()
+    this.#authenticationRetained = false
+    if (this.#authenticationPending === 0) this.#authenticationBackend = ''
+  }
+
+  async #callAuthentication(backend, method, args, creates = false, closes = false) {
+    const selected = requireBackend(backend)
+    if (this.#authenticationBackend && this.#authenticationBackend !== selected) {
+      throw new Error(`cannot switch from ${this.#authenticationBackend} while its authentication session is active`)
+    }
+    // Reserve the backend before awaiting startup or an earlier operation. A
+    // concurrent backend request must not terminate the Worker owning handles.
+    this.#authenticationBackend = selected
+    this.#authenticationPending++
+    const epoch = this.#authenticationEpoch
+    const task = this.#authenticationQueue.then(async () => {
+      if (epoch !== this.#authenticationEpoch || this.#terminated) {
+        throw new Error('authentication request was cancelled')
+      }
+      if (!creates && !this.#authenticationRetained) {
+        if (closes) return ''
+        throw new Error('authentication session has no retained state')
+      }
+      let token, ownedHandle
+      const forwarded = [...args]
+      if (!creates && !closes) {
+        if (!(args[0] instanceof Uint8Array) || args[0].byteLength > 128) {
+          throw new Error('authentication handle must be bounded UTF-8 Uint8Array bytes')
+        }
+        token = new TextDecoder('utf-8', { fatal: true }).decode(args[0])
+        ownedHandle = this.#authenticationHandles.get(token)
+        if (!ownedHandle || ownedHandle.runtime !== this.#active?.runtime) {
+          throw new Error('authentication handle belongs to an expired or different Worker')
+        }
+        forwarded[0] = new TextEncoder().encode(ownedHandle.id)
+      }
+      const result = await this.#call(selected, method, forwarded, runtime =>
+        epoch === this.#authenticationEpoch && (!ownedHandle || ownedHandle.runtime === runtime)
+      )
+      if (epoch !== this.#authenticationEpoch || this.#terminated || this.#active?.backend !== selected) {
+        throw new Error('authentication Worker session was lost')
+      }
+      if (creates) this.#authenticationRetained = true
+      if (closes) {
+        this.#authenticationRetained = false
+        this.#authenticationHandles.clear()
+      }
+      if (method === 'discardAuthentication') this.#authenticationHandles.delete(token)
+      if (creates || method === 'applyAuthentication') {
+        const value = JSON.parse(result)
+        if (!value || typeof value.handle !== 'string' || !/^[1-9][0-9]{0,19}$/.test(value.handle) || typeof value.root !== 'string') {
+          throw new Error('invalid authentication handle response')
+        }
+        // Public handles are opaque browser identities. Never expose reusable
+        // per-WASM numeric IDs across Worker or router lifetimes.
+        const handle = globalThis.crypto.randomUUID()
+        this.#authenticationHandles.set(handle, { runtime: this.#active.runtime, id: value.handle })
+        return JSON.stringify({ ...value, handle })
+      }
+      return result
+    })
+    this.#authenticationQueue = task.then(() => undefined, () => undefined)
+    try {
+      return await task
+    } finally {
+      this.#authenticationPending--
+      if (this.#authenticationPending === 0 && !this.#authenticationRetained) this.#authenticationBackend = ''
+    }
+  }
+
+  createAuthentication(backend, stateJSON) {
+    return this.#callAuthentication(backend, 'createAuthentication', [stateJSON], true)
+  }
+  importAuthentication(backend, candidateJSON) {
+    return this.#callAuthentication(backend, 'importAuthentication', [candidateJSON], true)
+  }
+  applyAuthentication(backend, handle, deltaJSON) {
+    return this.#callAuthentication(backend, 'applyAuthentication', [handle, deltaJSON])
+  }
+  exportAuthentication(backend, handle) {
+    return this.#callAuthentication(backend, 'exportAuthentication', [handle])
+  }
+  discardAuthentication(backend, handle) {
+    return this.#callAuthentication(backend, 'discardAuthentication', [handle])
+  }
+  closeAuthentication(backend) {
+    return this.#callAuthentication(backend, 'closeAuthentication', [], false, true)
   }
   compute(backend, transactionID, updateViewJSON, semanticIntentJSON) {
     return this.#call(backend, 'compute', [transactionID, updateViewJSON, semanticIntentJSON])
@@ -423,6 +533,7 @@ export class BrowserMaltWriterRouter {
       this.#active = null
     }
     if (this.#sessionBackend === selected) this.#sessionBackend = ''
+    this.#resetAuthentication(selected)
     this.#setStatus(selected, 'idle')
   }
 
@@ -437,6 +548,7 @@ export class BrowserMaltWriterRouter {
     this.#active?.runtime.terminate()
     this.#active = null
     this.#sessionBackend = ''
+    this.#resetAuthentication(this.#authenticationBackend)
     this.#setStatus('kzg', 'terminated')
     this.#setStatus('ipa', 'terminated')
   }

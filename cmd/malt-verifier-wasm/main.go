@@ -74,6 +74,7 @@ func main() {
 	js.Global().Set("maltVerifyMapProof", mapProofFunction)
 	js.Global().Set("maltVerifyResolve", resolveFunction)
 	js.Global().Set("maltVerifyRead", readFunction)
+	js.Global().Set("maltVerifierReady", true)
 	select {}
 }
 

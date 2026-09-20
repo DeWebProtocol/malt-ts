@@ -345,6 +345,24 @@ export class MaltWriterWorker {
   updateAuthentication(backend, candidateJSON, stateJSON) {
     return this.#request(backend, 'updateAuthentication', [candidateJSON, stateJSON]);
   }
+  createAuthentication(backend, stateJSON) {
+    return this.#request(backend, "createAuthentication", [stateJSON]);
+  }
+  importAuthentication(backend, candidateJSON) {
+    return this.#request(backend, "importAuthentication", [candidateJSON]);
+  }
+  applyAuthentication(backend, handle, deltaJSON) {
+    return this.#request(backend, "applyAuthentication", [handle, deltaJSON]);
+  }
+  exportAuthentication(backend, handle) {
+    return this.#request(backend, "exportAuthentication", [handle]);
+  }
+  discardAuthentication(backend, handle) {
+    return this.#request(backend, "discardAuthentication", [handle]);
+  }
+  closeAuthentication(backend) {
+    return this.#request(backend, "closeAuthentication", []);
+  }
   compute(backend, transactionID, updateViewJSON, semanticIntentJSON) {
     return this.#request(backend, "compute", [transactionID, updateViewJSON, semanticIntentJSON]);
   }

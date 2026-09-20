@@ -26,6 +26,8 @@ function fakeRuntime(target, {
   fatal = new Promise(() => {}),
   runtimeState = { state: 'ready' }
 } = {}) {
+  let nextHandle = 0
+  const newHandle = async () => JSON.stringify({ handle: String(++nextHandle), root: 'root' })
   return {
     ...target,
     ready,
@@ -41,6 +43,14 @@ function fakeRuntime(target, {
     acceptReceipt: vi.fn(async () => 'candidate'),
     discard: vi.fn(async () => 'operation'),
     closeSession: vi.fn(async () => {}),
+    prepareAuthentication: vi.fn(async () => '{}'),
+    updateAuthentication: vi.fn(async () => '{}'),
+    createAuthentication: vi.fn(newHandle),
+    importAuthentication: vi.fn(newHandle),
+    applyAuthentication: vi.fn(newHandle),
+    exportAuthentication: vi.fn(async () => '{}'),
+    discardAuthentication: vi.fn(async () => '{}'),
+    closeAuthentication: vi.fn(async () => '{}'),
     compute: vi.fn(async () => '{}'),
     terminate: vi.fn()
   }
@@ -680,5 +690,154 @@ it('routes typed candidates through the selected Worker without changing byte in
   await writer.updateAuthentication('kzg', base, state)
   expect(runtime.prepareAuthentication).toHaveBeenCalledWith('kzg', state)
   expect(runtime.updateAuthentication).toHaveBeenCalledWith('kzg', base, state)
+  writer.terminate()
+})
+
+it.each(['prepareAuthentication', 'updateAuthentication', 'applyAuthentication', 'exportAuthentication'])(
+  'rejects a controller missing the current %s method before ready', async (method) => {
+    const runtime = fakeRuntime({ backend: 'kzg', profile: '' })
+    delete runtime[method]
+    const writer = await createBrowserMaltWriter({
+      baseURL: '/writer/version/', browserOrigin: 'https://gateway.test',
+      importController: async () => ({ createMaltWriterWorker: async () => runtime })
+    })
+    await expect(writer.whenReady('kzg')).rejects.toThrow('invalid single-Worker runtime')
+    expect(runtime.terminate).toHaveBeenCalled()
+    writer.terminate()
+  }
+)
+
+it('routes retained authentication operations without sending a complete base again', async () => {
+  const runtime = fakeRuntime({ backend: 'kzg', profile: '' })
+  const writer = await createBrowserMaltWriter({
+    baseURL: '/writer/version/', browserOrigin: 'https://gateway.test',
+    importController: async () => ({ createMaltWriterWorker: async () => runtime })
+  })
+  const state = new TextEncoder().encode('{}')
+  const internalHandle = new TextEncoder().encode('1')
+  const delta = new TextEncoder().encode('{"profile":"malt.authentication-delta/0","changes":[]}')
+  const created = JSON.parse(await writer.createAuthentication('kzg', state))
+  const handle = new TextEncoder().encode(created.handle)
+  await writer.applyAuthentication('kzg', handle, delta)
+  await writer.exportAuthentication('kzg', handle)
+  await writer.discardAuthentication('kzg', handle)
+  await writer.closeAuthentication('kzg')
+  expect(runtime.applyAuthentication).toHaveBeenCalledWith('kzg', internalHandle, delta)
+  expect(runtime.exportAuthentication).toHaveBeenCalledWith('kzg', internalHandle)
+  expect(runtime.updateAuthentication).not.toHaveBeenCalled()
+  writer.terminate()
+})
+
+
+it('pins the authentication backend during pending create and until explicit close', async () => {
+  const harness = loaderHarness()
+  const writer = await harness.writer
+  await writer.whenReady('kzg')
+  const created = deferred()
+  harness.runtimes[0].createAuthentication.mockReturnValueOnce(created.promise)
+  const creating = writer.createAuthentication('kzg', new Uint8Array([1]))
+  await expect(writer.whenReady('ipa')).rejects.toThrow('authentication session is active')
+  expect(harness.runtimes[0].terminate).not.toHaveBeenCalled()
+  created.resolve('{"handle":"1","root":"root"}')
+  await creating
+  await writer.closeSession('kzg')
+  await expect(writer.whenReady('ipa')).rejects.toThrow('authentication session is active')
+  await writer.closeAuthentication('kzg')
+  await writer.whenReady('ipa')
+  expect(harness.runtimes[0].terminate).toHaveBeenCalledOnce()
+  writer.terminate()
+})
+
+it('serializes authentication close/create and preserves the independent semantic session pin', async () => {
+  const harness = loaderHarness()
+  const writer = await harness.writer
+  await writer.bootstrap('kzg')
+  await writer.createAuthentication('kzg', new Uint8Array([1]))
+  const closing = writer.closeAuthentication('kzg')
+  const creating = writer.createAuthentication('kzg', new Uint8Array([1]))
+  await Promise.all([closing, creating])
+  await writer.closeSession('kzg')
+  await expect(writer.whenReady('ipa')).rejects.toThrow('authentication session is active')
+  await writer.bootstrap('kzg')
+  await writer.closeAuthentication('kzg')
+  await expect(writer.whenReady('ipa')).rejects.toThrow('writer session is active')
+  writer.terminate()
+})
+
+it('releases a failed initial authentication reservation and rejects handles after termination', async () => {
+  const harness = loaderHarness()
+  const writer = await harness.writer
+  await writer.whenReady('kzg')
+  harness.runtimes[0].createAuthentication.mockRejectedValueOnce(new Error('invalid state'))
+  await expect(writer.createAuthentication('kzg', new Uint8Array([1]))).rejects.toThrow('invalid state')
+  await writer.whenReady('ipa')
+  await writer.createAuthentication('ipa', new Uint8Array([1]))
+  writer.terminateBackend('ipa')
+  await expect(writer.exportAuthentication('ipa', new Uint8Array([1]))).rejects.toThrow('no retained state')
+  await writer.whenReady('kzg')
+  writer.terminate()
+})
+
+
+it('rejects old handles after Worker recreation even when Core reuses its numeric ID', async () => {
+  const harness = loaderHarness()
+  const writer = await harness.writer
+  const state = new TextEncoder().encode('{}')
+  const old = JSON.parse(await writer.createAuthentication('kzg', state))
+  writer.terminateBackend('kzg')
+  const current = JSON.parse(await writer.createAuthentication('kzg', state))
+  expect(current.handle).not.toBe(old.handle)
+  const stale = new TextEncoder().encode(old.handle)
+  for (const method of ['exportAuthentication', 'discardAuthentication', 'applyAuthentication']) {
+    await expect(writer[method]('kzg', stale, state)).rejects.toThrow('expired or different Worker')
+    expect(harness.runtimes[1][method]).not.toHaveBeenCalled()
+  }
+  await writer.exportAuthentication('kzg', new TextEncoder().encode(current.handle))
+  writer.terminate()
+})
+
+it('does not let another router reuse an authentication handle', async () => {
+  const a = loaderHarness(), b = loaderHarness()
+  const first = await a.writer, second = await b.writer
+  const state = new TextEncoder().encode('{}')
+  const old = JSON.parse(await first.createAuthentication('kzg', state))
+  await second.createAuthentication('kzg', state)
+  await expect(second.exportAuthentication('kzg', new TextEncoder().encode(old.handle))).rejects.toThrow('expired or different Worker')
+  expect(b.runtimes[0].exportAuthentication).not.toHaveBeenCalled()
+  first.terminate()
+  second.terminate()
+})
+
+it('cancels queued authentication creation before terminateBackend can be undone by a microtask', async () => {
+  const harness = loaderHarness()
+  const writer = await harness.writer
+  const pending = writer.createAuthentication('kzg', new TextEncoder().encode('{}'))
+  writer.terminateBackend('kzg')
+  await expect(pending).rejects.toThrow('cancelled')
+  expect(harness.controller.createMaltWriterWorker).not.toHaveBeenCalled()
+  expect(writer.status('kzg').state).toBe('idle')
+  await writer.createAuthentication('kzg', new TextEncoder().encode('{}'))
+  expect(harness.controller.createMaltWriterWorker).toHaveBeenCalledOnce()
+  writer.terminate()
+})
+
+it('cancels queued creation after a fatal runtime loss', async () => {
+  const fatal = deferred()
+  const runtime = fakeRuntime({ backend: 'kzg', profile: '' }, { fatal: fatal.promise })
+  const factory = vi.fn(async () => runtime)
+  const writer = await createBrowserMaltWriter({ importController: async () => ({ createMaltWriterWorker: factory }) })
+  await writer.whenReady('kzg')
+  const first = deferred()
+  runtime.createAuthentication.mockReturnValueOnce(first.promise)
+  const pending = writer.createAuthentication('kzg', new Uint8Array([1]))
+  const queued = writer.createAuthentication('kzg', new Uint8Array([2]))
+  const checkedPending = expect(pending).rejects.toThrow('session was lost')
+  const checkedQueued = expect(queued).rejects.toThrow('cancelled')
+  await vi.waitFor(() => expect(runtime.createAuthentication).toHaveBeenCalledOnce())
+  fatal.resolve(new Error('runtime stopped'))
+  await vi.waitFor(() => expect(runtime.terminate).toHaveBeenCalledOnce())
+  first.resolve('{"handle":"1","root":"root"}')
+  await Promise.all([checkedPending, checkedQueued])
+  expect(factory).toHaveBeenCalledOnce()
   writer.terminate()
 })
