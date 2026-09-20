@@ -136,52 +136,47 @@ test("request errors keep the selected Worker alive", async () => {
   worker.ready();
   await writer.ready;
 
-  const bootstrap = writer.bootstrap("kzg");
+  const bootstrap = writer.createAuthentication("kzg", new Uint8Array([1]));
   const bootstrapRequest = await worker.nextRequest();
-  assert.equal(bootstrapRequest.method, "bootstrap");
-  worker.respond(bootstrapRequest, { result: '{"profile":"malt.update-view/v1"}' });
-  assert.equal(await bootstrap, '{"profile":"malt.update-view/v1"}');
+  assert.equal(bootstrapRequest.method, "createAuthentication");
+  worker.respond(bootstrapRequest, { result: '{"profile":"malt.authentication/0"}' });
+  assert.equal(await bootstrap, '{"profile":"malt.authentication/0"}');
 
-  const invalidLoad = writer.load("kzg", new Uint8Array([1]));
+  const invalidLoad = writer.importAuthentication("kzg", new Uint8Array([1]));
   const invalidRequest = await worker.nextRequest();
-  worker.respond(invalidRequest, { error: "invalid update view" });
-  await assert.rejects(invalidLoad, /invalid update view/);
+  worker.respond(invalidRequest, { error: "invalid candidate" });
+  await assert.rejects(invalidLoad, /invalid candidate/);
   assert.equal(writer.status().state, "ready");
   assert.equal(worker.terminationCount, 0);
 
-  const close = writer.closeSession("kzg");
+  const close = writer.closeAuthentication("kzg");
   const closeRequest = await worker.nextRequest();
-  assert.equal(closeRequest.method, "closeSession");
+  assert.equal(closeRequest.method, "closeAuthentication");
   worker.respond(closeRequest, { result: "closed" });
-  assert.equal(await close, undefined);
+  assert.equal(await close, "closed");
 
-  writer.terminateAll();
+  writer.terminate();
   assert.equal(worker.terminationCount, 1);
 });
 
-test("authenticated snapshot RPCs preserve exact bytes and the stateful Worker", async () => {
+test("batch and receipt RPCs preserve exact bytes and the selected Worker", async () => {
   const { writer, worker } = newHarness({ backend: "kzg" });
-  worker.ready();
-  await writer.ready;
-  const snapshotBytes = new Uint8Array([4, 5, 6]);
-  const secret = new Uint8Array(32).fill(7);
-
-  const restoring = writer.restore("kzg", snapshotBytes, secret);
-  const restoreRequest = await worker.nextRequest();
-  assert.equal(restoreRequest.method, "restore");
-  assert.equal(restoreRequest.args[0], snapshotBytes);
-  assert.equal(restoreRequest.args[1], secret);
-  worker.respond(restoreRequest, { result: '{"profile":"malt.update-view/v1"}' });
-  assert.equal(await restoring, '{"profile":"malt.update-view/v1"}');
-
-  const snapshotting = writer.snapshot("kzg", secret);
-  const snapshotRequest = await worker.nextRequest();
-  assert.equal(snapshotRequest.method, "snapshot");
-  assert.equal(snapshotRequest.args[0], secret);
-  worker.respond(snapshotRequest, { result: '{"profile":"malt.ts.writer-session-snapshot/v1"}' });
-  assert.equal(await snapshotting, '{"profile":"malt.ts.writer-session-snapshot/v1"}');
-  assert.equal(writer.status().state, "ready");
-  assert.equal(worker.terminationCount, 0);
+  worker.ready(); await writer.ready;
+  const batch = new Uint8Array([4, 5, 6]), receipt = new Uint8Array([7, 8]);
+  const validating = writer.validateAuthenticationBatch("kzg", batch);
+  const batchRequest = await worker.nextRequest();
+  assert.equal(batchRequest.method, "validateAuthenticationBatch");
+  assert.equal(batchRequest.args[0], batch);
+  worker.respond(batchRequest, { result: "digest" });
+  assert.equal(await validating, "digest");
+  const checking = writer.validateAuthenticationReceipt("kzg", batch, receipt);
+  const receiptRequest = await worker.nextRequest();
+  assert.equal(receiptRequest.method, "validateAuthenticationReceipt");
+  assert.equal(receiptRequest.args[0], batch); assert.equal(receiptRequest.args[1], receipt);
+  worker.respond(receiptRequest, { result: "root" });
+  assert.equal(await checking, "root");
+  assert.equal(writer.status().state, "ready"); assert.equal(worker.terminationCount, 0);
+  writer.terminate();
 });
 
 test("initialization and fatal failures terminate and reject work", async () => {
@@ -193,7 +188,7 @@ test("initialization and fatal failures terminate and reject work", async () => 
   const { writer, worker } = newHarness();
   worker.ready();
   await writer.ready;
-  const pending = writer.load("ipa", new Uint8Array([1]));
+  const pending = writer.importAuthentication("ipa", new Uint8Array([1]));
   await worker.nextRequest();
   worker.fail(new Error("runtime crashed"));
   await assert.rejects(pending, /runtime crashed/);
@@ -289,7 +284,7 @@ test("response messages require an explicit exact backend/profile target", async
   const { writer, worker } = newHarness();
   worker.ready();
   await writer.ready;
-  const pending = writer.bootstrap("ipa");
+  const pending = writer.createAuthentication("ipa", new Uint8Array([1]));
   const request = await worker.nextRequest();
   assert.equal(request.backend, "ipa");
   assert.equal(request.profile, "compact");

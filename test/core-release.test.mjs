@@ -5,7 +5,7 @@ import os from 'node:os'
 import path from 'node:path'
 import { describe, expect, it } from 'vitest'
 
-function audit({ version = 'v0.0.9-RC.1', manifestVersion = version, draft = false, tag = version, checksum = true } = {}) {
+function audit({ version = 'v0.0.9-RC.1', manifestVersion = version, draft = false, tag = version, checksum = true, schema = 'malt.wasm-release/v2' } = {}) {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'malt-ts-release-audit.'))
   try {
     const scripts = path.join(root, 'scripts')
@@ -19,7 +19,7 @@ function audit({ version = 'v0.0.9-RC.1', manifestVersion = version, draft = fal
     // audit here so the prerelease cases never call the network.
     fs.writeFileSync(path.join(scripts, 'resolve-core.sh'), '#!/bin/sh\nexit 0\n', { mode: 0o755 })
     const manifest = {
-      schema: 'malt.wasm-release/v1',
+      schema,
       source_repository: 'https://github.com/DeWebProtocol/malt-core.git',
       source_module: 'github.com/dewebprotocol/malt-core',
       source_version: version,
@@ -82,6 +82,7 @@ describe('published Core release audit', () => {
     ['another version in the filename', { manifestVersion: 'v0.0.8' }, /invalid locked Core release manifest/],
     ['a draft release', { draft: true }, /does not expose/],
     ['a different published tag', { tag: 'v0.0.9-rc.1' }, /does not expose/],
+    ['retired manifest schema', { schema: 'malt.wasm-release/v1' }, /semantics do not match/],
     ['missing checksum evidence', { checksum: false }, /does not bind/]
   ]) {
     it(`rejects ${name}`, () => {

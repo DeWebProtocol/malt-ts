@@ -19,26 +19,7 @@ if [[ -z "${malt_version}" || ! "${malt_commit}" =~ ^[0-9a-f]{40}$ || \
 	exit 1
 fi
 
-runner="${malt_module_dir}/scripts/run-verifier-wasm-vectors.mjs"
-vectors="${malt_module_dir}/conformance/resolve-read/v3/vectors.json"
-map_proof_vectors="${malt_module_dir}/conformance/map-proof/v2/vectors.json"
-for source_file in "${runner}" "${vectors}" "${map_proof_vectors}"; do
-	if [[ ! -f "${source_file}" ]]; then
-		printf 'pinned MALT module is missing verifier conformance input: %s\n' \
-			"${source_file}" >&2
-		exit 1
-	fi
-done
-
-for backend in all kzg ipa; do
-	node "${runner}" \
-		"${verifier_root}/malt-verifier.wasm" \
-		"${verifier_root}/wasm_exec.js" \
-		"${vectors}" \
-		"${backend}" \
-		"${map_proof_vectors}"
-done
 node "${malt_module_dir}/scripts/run-authentication-wasm.mjs" verifier \
 	"${verifier_root}/malt-verifier.wasm" "${verifier_root}/wasm_exec.js" \
-	"${malt_module_dir}/conformance/authentication-v0.json" all
+	"${malt_module_dir}/conformance/authentication-v1.json" all
 printf 'malt-ts verifier passes the MALT %s conformance corpus.\n' "${malt_version}"

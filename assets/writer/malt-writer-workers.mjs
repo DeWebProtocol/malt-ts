@@ -339,6 +339,12 @@ export class MaltWriterWorker {
     });
   }
 
+  validateAuthenticationBatch(backend, batchJSON) {
+    return this.#request(backend, 'validateAuthenticationBatch', [batchJSON]);
+  }
+  validateAuthenticationReceipt(backend, batchJSON, receiptJSON) {
+    return this.#request(backend, 'validateAuthenticationReceipt', [batchJSON, receiptJSON]);
+  }
   prepareAuthentication(backend, stateJSON) {
     return this.#request(backend, 'prepareAuthentication', [stateJSON]);
   }
@@ -349,7 +355,11 @@ export class MaltWriterWorker {
     return this.#request(backend, "createAuthentication", [stateJSON]);
   }
   importAuthentication(backend, candidateJSON) {
-    return this.#request(backend, "importAuthentication", [candidateJSON]);
+    const transfer = candidateJSON instanceof Uint8Array &&
+      candidateJSON.buffer instanceof ArrayBuffer && candidateJSON.byteOffset === 0 &&
+      candidateJSON.byteLength > 0 && candidateJSON.byteLength === candidateJSON.buffer.byteLength
+      ? [candidateJSON.buffer] : [];
+    return this.#request(backend, "importAuthentication", [candidateJSON], transfer);
   }
   applyAuthentication(backend, handle, deltaJSON) {
     return this.#request(backend, "applyAuthentication", [handle, deltaJSON]);
@@ -363,50 +373,6 @@ export class MaltWriterWorker {
   closeAuthentication(backend) {
     return this.#request(backend, "closeAuthentication", []);
   }
-  compute(backend, transactionID, updateViewJSON, semanticIntentJSON) {
-    return this.#request(backend, "compute", [transactionID, updateViewJSON, semanticIntentJSON]);
-  }
-  bootstrap(backend) { return this.#request(backend, "bootstrap", []); }
-  load(backend, updateViewJSON) {
-    const transfer =
-      updateViewJSON instanceof Uint8Array &&
-      updateViewJSON.buffer instanceof ArrayBuffer &&
-      updateViewJSON.byteOffset === 0 &&
-      updateViewJSON.byteLength === updateViewJSON.buffer.byteLength &&
-      updateViewJSON.buffer.byteLength > 0
-        ? [updateViewJSON.buffer]
-        : [];
-    return this.#request(backend, "load", [updateViewJSON], transfer);
-  }
-  snapshot(backend, checkpointKey) {
-    return this.#request(backend, "snapshot", [checkpointKey]);
-  }
-  restore(backend, snapshotJSON, checkpointKey) {
-    return this.#request(backend, "restore", [snapshotJSON, checkpointKey]);
-  }
-  prepare(backend, transactionID, semanticIntentJSON) {
-    return this.#request(backend, "prepare", [transactionID, semanticIntentJSON]);
-  }
-  getPreparedResult(backend, transactionID) {
-    return this.#request(backend, "getPreparedResult", [transactionID]);
-  }
-  validateReceipt(backend, writerResultJSON, materializationReceiptJSON) {
-    return this.#request(backend, "validateReceipt", [writerResultJSON, materializationReceiptJSON]);
-  }
-  acceptReceipt(backend, transactionID, materializationReceiptJSON) {
-    return this.#request(backend, "acceptReceipt", [transactionID, materializationReceiptJSON]);
-  }
-  discard(backend, transactionID) { return this.#request(backend, "discard", [transactionID]); }
-  closeSession(backend) {
-    return this.#request(backend, "closeSession", []).then(() => undefined);
-  }
-
-  terminateBackend(backend) {
-    this.#requireBackend(backend);
-    this.terminate();
-  }
-
-  terminateAll() { this.terminate(); }
 
   terminate() {
     this.#stop("terminated", new Error(`${this.backend} writer was terminated`));

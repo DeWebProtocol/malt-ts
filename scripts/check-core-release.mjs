@@ -45,7 +45,7 @@ if (
 }
 
 if (
-  manifest.schema !== 'malt.wasm-release/v1' ||
+  manifest.schema !== 'malt.wasm-release/v2' ||
   manifest.source_repository !== lock.source_repository ||
   manifest.source_module !== lock.module_path ||
   manifest.source_version !== lock.module_version ||

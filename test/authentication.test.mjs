@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { createAuthenticationVerification, verifyAuthenticationLocally } from '../src/index.mjs'
 
-const profile = 'malt.authentication/0'
+const profile = 'malt.authentication/1'
 const request = { profile, root: 'caller-root', operation: 'binding', steps: [],
   input: { kind: 'index', number: '18446744073709551615' } }
 const result = { profile, resolved: 'caller-root', traversal: { steps: [] } }
@@ -45,5 +45,16 @@ it('binds path absence to the new request profile without reinterpreting steps',
     return JSON.stringify({ profile, valid: true })
   } }
   expect((await verifyAuthenticationLocally({ request: q, result: proof, provider })).valid).toBe(true)
-  expect((await verifyAuthenticationLocally({ request: q, result, provider })).valid).toBe(false)
+  expect((await verifyAuthenticationLocally({ request: q, result: { ...result, profile: 'malt.authentication/0' }, provider })).valid).toBe(false)
+})
+
+it('rejects the retired query profile before calling WASM', async () => {
+  let called = false
+  const checked = await verifyAuthenticationLocally({
+    request: { ...request, profile: 'malt.authentication/0' },
+    result: { ...result, profile: 'malt.authentication/0' },
+    provider: { authentication() { called = true; throw new Error('unexpected call') } }
+  })
+  expect(checked.valid).toBe(false)
+  expect(called).toBe(false)
 })

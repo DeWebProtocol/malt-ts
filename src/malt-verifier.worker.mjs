@@ -100,12 +100,6 @@ function selectVerifier(kind) {
   switch (kind) {
     case 'authentication':
       return globalThis.maltVerifyAuthentication
-    case 'resolve':
-      return globalThis.maltVerifyResolve
-    case "read":
-      return globalThis.maltVerifyRead
-    case "mapProof":
-      return globalThis.maltVerifyMapProof
     default:
       throw new Error(`unsupported local verifier operation ${JSON.stringify(kind)}`)
   }
@@ -121,7 +115,7 @@ async function waitForProvider() {
     if (Date.now() >= deadline) throw new Error('local verifier initialization timed out')
     await new Promise((resolve) => setTimeout(resolve, 10))
   }
-  for (const name of ['maltVerifyAuthentication', 'maltVerifyResolve', 'maltVerifyRead', 'maltVerifyMapProof']) {
+  for (const name of ['maltVerifyAuthentication']) {
     if (typeof globalThis[name] !== 'function') throw new Error(`local verifier did not register ${name}`)
   }
 

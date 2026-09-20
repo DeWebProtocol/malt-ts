@@ -40,28 +40,18 @@ go_root="$(go env GOROOT)"
 cp "${go_root}/lib/wasm/wasm_exec.js" "${output}/writer/wasm_exec.js"
 cp "${go_root}/lib/wasm/wasm_exec.js" "${output}/verifier/wasm_exec.js"
 cp "${repo_root}/assets/writer/malt-writer-worker.mjs" "${repo_root}/assets/writer/malt-writer-workers.mjs" "${output}/writer/"
-for backend in all kzg ipa; do
- node "${core_root}/scripts/run-verifier-wasm-vectors.mjs" "${output}/verifier/malt-verifier.wasm" \
-  "${output}/verifier/wasm_exec.js" "${core_root}/conformance/resolve-read/v3/vectors.json" "${backend}" \
-  "${core_root}/conformance/map-proof/v2/vectors.json"
-done
 node "${core_root}/scripts/run-authentication-wasm.mjs" verifier "${output}/verifier/malt-verifier.wasm" \
- "${output}/verifier/wasm_exec.js" "${core_root}/conformance/authentication-v0.json" all
+ "${output}/verifier/wasm_exec.js" "${core_root}/conformance/authentication-v1.json" all
 for profile in kzg direct compact fast; do
  backend=ipa
  wasm="${output}/writer/malt-writer-ipa-${profile}.wasm"
  profile_arg="${profile}"
  if [[ "${profile}" == kzg ]]; then backend=kzg; wasm="${output}/writer/malt-writer-kzg.wasm"; profile_arg=; fi
- node "${core_root}/scripts/run-writer-wasm-smoke.mjs" "${wasm}" "${output}/writer/wasm_exec.js" \
-  "${core_root}/conformance/client-root/v4/vectors.json" "${backend}" "${profile_arg}"
  node "${core_root}/scripts/run-authentication-wasm.mjs" writer "${wasm}" "${output}/writer/wasm_exec.js" \
-  "${core_root}/conformance/authentication-v0.json" "${backend}"
+  "${core_root}/conformance/authentication-v1.json" "${backend}"
  node "${core_root}/scripts/run-retained-writer-wasm.mjs" "${wasm}" "${output}/writer/wasm_exec.js" "${backend}" "${profile_arg}"
+ node "${core_root}/scripts/run-authentication-batch-wasm.mjs" "${wasm}" "${output}/writer/wasm_exec.js" "${backend}" "${profile_arg}"
 done
-node "${repo_root}/scripts/run-writer-snapshot-smoke.mjs" "${output}/writer/malt-writer-kzg.wasm" "${output}/writer/wasm_exec.js" kzg
-node "${repo_root}/scripts/run-writer-snapshot-smoke.mjs" "${output}/writer/malt-writer-ipa-compact.wasm" "${output}/writer/wasm_exec.js" ipa compact
-node "${core_root}/scripts/run-writer-worker-smoke.mjs" "${output}/writer/malt-writer-ipa-compact.wasm" \
- "${output}/writer/wasm_exec.js" "${output}/writer/malt-writer-workers.mjs" "${output}/writer/malt-writer-worker.mjs" \
- "${core_root}/conformance/client-root/v4/vectors.json" ipa compact
+node --test "${repo_root}/node-tests/malt-writer-workers.mjs"
 node "${repo_root}/scripts/run-authentication-router-smoke.mjs" "${output}/writer" "${core_root}/scripts/run-writer-worker-node.mjs"
 printf 'Development source integration passed; non-release artifacts: %s\n' "${output}"

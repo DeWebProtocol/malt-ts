@@ -3,7 +3,7 @@ import { once } from 'node:events'
 import { Worker } from 'node:worker_threads'
 import { expect, it } from 'vitest'
 
-it('starts with operation-specific exports and rejects the retired artifact operation', async () => {
+it('starts with only typed exports and rejects the retired artifact operation', async () => {
   const worker = new Worker(new URL('./fixtures/verifier-worker-harness.mjs', import.meta.url))
   try {
     await once(worker, 'message')
@@ -23,10 +23,10 @@ it('starts with operation-specific exports and rejects the retired artifact oper
     })
 
     const current = once(worker, 'message')
-    worker.postMessage({ type: 'verify', id: 2, kind: 'read', json: '{}' })
+    worker.postMessage({ type: 'verify', id: 2, kind: 'authentication', json: '{}' })
     expect((await current)[0]).toEqual({
       type: 'result', id: 2,
-      result: '{"profile":"malt.read/v0alpha1","valid":true}'
+      result: '{"profile":"malt.authentication/1","valid":true}'
     })
   } finally {
     await worker.terminate()

@@ -3,6 +3,8 @@
 const SUPPORTED_BACKENDS = new Set(["kzg", "ipa"]);
 const IPA_PROFILES = new Set(["direct", "compact", "fast"]);
 const RPC_FUNCTIONS = Object.freeze({
+  validateAuthenticationBatch: "maltValidateAuthenticationBatch",
+  validateAuthenticationReceipt: "maltValidateAuthenticationReceipt",
   closeAuthentication: "maltCloseAuthentication",
   discardAuthentication: "maltDiscardAuthentication",
   exportAuthentication: "maltExportAuthentication",
@@ -11,17 +13,6 @@ const RPC_FUNCTIONS = Object.freeze({
   createAuthentication: "maltCreateAuthentication",
   prepareAuthentication: "maltPrepareAuthentication",
   updateAuthentication: "maltUpdateAuthentication",
-  compute: "maltComputeClientRootV1",
-  bootstrap: "maltWriterBootstrapSessionV1",
-  load: "maltWriterLoadSessionV1",
-  snapshot: "maltWriterSnapshotSessionV1",
-  restore: "maltWriterRestoreSessionV1",
-  prepare: "maltWriterPrepareSessionV1",
-  getPreparedResult: "maltWriterGetPreparedResultV1",
-  validateReceipt: "maltWriterValidateReceiptV1",
-  acceptReceipt: "maltWriterAcceptSessionReceiptV1",
-  discard: "maltWriterDiscardSessionCandidateV1",
-  closeSession: "maltWriterCloseSessionV1",
 });
 const STATEFUL_RPC_METHODS = new Set([
   "createAuthentication",
@@ -30,15 +21,6 @@ const STATEFUL_RPC_METHODS = new Set([
   "exportAuthentication",
   "discardAuthentication",
   "closeAuthentication",
-  "bootstrap",
-  "load",
-  "snapshot",
-  "restore",
-  "prepare",
-  "getPreparedResult",
-  "acceptReceipt",
-  "discard",
-  "closeSession",
 ]);
 
 let initialized = false;
