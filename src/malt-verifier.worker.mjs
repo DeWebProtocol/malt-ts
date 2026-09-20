@@ -109,8 +109,6 @@ function selectVerifier(kind) {
       return globalThis.maltVerifyRead
     case "mapProof":
       return globalThis.maltVerifyMapProof
-    case "artifact":
-      return globalThis.maltVerifyArtifact
     default:
       throw new Error(`unsupported local verifier operation ${JSON.stringify(kind)}`)
   }
@@ -119,7 +117,6 @@ function selectVerifier(kind) {
 async function waitForProvider() {
   const deadline = Date.now() + 120_000
   while (
-    typeof globalThis.maltVerifyArtifact !== 'function' ||
     typeof globalThis.maltVerifyResolve !== "function" ||
     typeof globalThis.maltVerifyRead !== "function" ||
     typeof globalThis.maltVerifyMapProof !== "function"

@@ -12,7 +12,6 @@ export interface BrowserVerifierProvider {
   read(json: string, signal?: AbortSignal): Promise<string>
   mapProof(json: string, signal?: AbortSignal): Promise<string>
   authentication?(json: string, signal?: AbortSignal): Promise<string>
-  artifact(json: string, signal?: AbortSignal): Promise<string>
   terminate(): void
 }
 

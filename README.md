@@ -137,3 +137,9 @@ fields and result profiles are rejected rather than translated. Candidate
 computation and receipt acceptance do not publish an application head or grant
 client trust. Conformance and distributed assets use the v3 client-root corpus, with an exact
 published Core lock and matching checksums.
+
+The pre-beta verifier API uses operation-specific `resolve`, `read`,
+`mapProof`, and `authentication` methods. The historical `artifact` method and
+`maltVerifyArtifact` internal export have been removed. This source cleanup
+preserves the exact published Core binding in `malt-core.lock.json`; adopting
+a newer Core release remains a separate lock-file update and conformance check.

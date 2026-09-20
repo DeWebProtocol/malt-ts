@@ -174,7 +174,7 @@ describe('browser verifier workers', () => {
     expect(FakeVerifierWorker.instances).toHaveLength(0)
   })
 
-  it('routes KZG, IPA, mixed typed proofs, and artifacts through that one worker', async () => {
+  it('routes KZG, IPA, and mixed typed proofs through that one worker', async () => {
     vi.stubGlobal('Worker', FakeVerifierWorker)
     const { loadBrowserVerifier, verifyResolveLocally } =
       await import('../src/verifier.mjs')
@@ -214,11 +214,11 @@ describe('browser verifier workers', () => {
     await expect(provider.resolve(verification(ipaRoot))).resolves.toContain('"valid":true')
     await expect(provider.resolve(mixed)).resolves.toContain('"valid":true')
     await expect(provider.read(verification(kzgRoot))).resolves.toContain('"valid":true')
-    await expect(provider.artifact('{}')).resolves.toContain('"valid":true')
+    expect(provider.artifact).toBeUndefined()
 
     expect(FakeVerifierWorker.instances).toHaveLength(1)
     expect(portableWorker.messages.filter((message) => message.type === 'verify'))
-      .toHaveLength(5)
+      .toHaveLength(4)
   })
 
   it('leases one worker and creates a fresh provider only after the final release', async () => {

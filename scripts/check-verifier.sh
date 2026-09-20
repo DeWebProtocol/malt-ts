@@ -78,7 +78,7 @@ MALT_SUM="${malt_module_sum}" MALT_GO_MOD_SUM="${malt_go_mod_sum}" \
 		CGO_ENABLED: "0", GOEXPERIMENT: "none", GOWASM: "", GOFIPS140: "off"
 	}
 	const expectedExports = [
-		"maltVerifyArtifact", "maltVerifyAuthentication", "maltVerifyMapProof", "maltVerifyRead", "maltVerifyResolve"
+		"maltVerifyAuthentication", "maltVerifyMapProof", "maltVerifyRead", "maltVerifyResolve"
 	]
 	if (
 		provenance.schema !== "malt.ts-verifier.provenance/v1" ||
