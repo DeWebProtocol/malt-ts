@@ -444,10 +444,6 @@ class BrowserVerifierProvider {
     return this.verify("authentication", json, signal)
   }
 
-  artifact(json, signal) {
-    return this.verify('artifact', json, signal)
-  }
-
   verify(kind, json, signal) {
     return this.callWorker(this.workerSlot, kind, json, signal)
   }
