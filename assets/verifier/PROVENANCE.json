@@ -1,13 +1,13 @@
 {
   "schema": "malt.ts-verifier.provenance/v1",
   "source_repository": "https://github.com/DeWebProtocol/malt-ts.git",
-  "build_inputs_sha256": "99c829f12bf3f0a018c1c325092a78bc9f6263f72f3992f99d47c435c77c777f",
+  "build_inputs_sha256": "c4c254ad38697a667aa1ce06e4921bd863520718a2c014cf8b0edcbd277de4f1",
   "core": {
     "module_path": "github.com/dewebprotocol/malt-core",
-    "module_version": "v0.0.9-rc.5",
+    "module_version": "v0.0.9-rc.6",
     "source_repository": "https://github.com/DeWebProtocol/malt-core.git",
-    "source_commit": "8a04f060d307d6b3ffec2d8b3fafb057eb9ac653",
-    "module_sum": "h1:guVYvNlbHiQn2i9qk0ZAm4zdZZUcDd8Q3THEh2qpoeQ=",
+    "source_commit": "9f1794e15df0414c95c217b3526d6b57631c1193",
+    "module_sum": "h1:wRuE+qrKghWFWWzXL3Gkn6qdByZeTgUL8JgEPf/4Ld4=",
     "go_mod_sum": "h1:o6L8K9vJp5hyrVo3fUtSsj0rvNpcboOcOb3nQwnR/gs="
   },
   "target": "js/wasm",
