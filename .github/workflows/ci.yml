@@ -52,5 +52,8 @@ jobs:
           make test-wasm
           git diff --exit-code -- assets
 
+      - name: Verify reproducible WASM release archives
+        run: make test-wasm-release
+
       - name: Inspect the npm package
         run: npm pack --dry-run

@@ -50,7 +50,7 @@ lock_fields="$(
 				(requirement) => requirement.Path === modulePath
 			)
 			if (requirements.length !== 1 || !requirements[0].Version) {
-				throw new Error(`gateway/go.mod must require ${modulePath} exactly once`)
+				throw new Error(`malt-ts/go.mod must require ${modulePath} exactly once`)
 			}
 			const replacements = (moduleFile.Replace || []).filter(
 				(replacement) => replacement.Old?.Path === modulePath
@@ -63,13 +63,13 @@ lock_fields="$(
 				fs.readFileSync(path.join(process.env.REPO_ROOT, "malt-core.lock.json"), "utf8")
 			)
 			const expectedKeys = [
-				"go_mod_sum", "module_path", "module_sum", "module_version", "release",
+				"go_mod_sum", "module_path", "module_sum", "module_version",
 				"schema", "source_commit", "source_repository"
 			]
 			const actualKeys = Object.keys(lock).sort()
 			if (
 				JSON.stringify(actualKeys) !== JSON.stringify(expectedKeys) ||
-				lock.schema !== "malt.ts-core-lock/v1" ||
+				lock.schema !== "malt.ts-core-lock/v2" ||
 				lock.module_path !== modulePath ||
 				lock.module_version !== moduleVersion ||
 				lock.source_repository !== "https://github.com/DeWebProtocol/malt-core.git" ||
@@ -77,23 +77,6 @@ lock_fields="$(
 				!/^v[0-9]+\.[0-9]+\.[0-9]+(?:-[0-9A-Za-z.-]+)?$/.test(moduleVersion)
 			) {
 				throw new Error(`malt-ts Core lock does not match ${modulePath}@${moduleVersion}`)
-			}
-			const expectedReleaseKeys = [
-				"manifest", "manifest_sha256", "tag", "verifier_asset_set_sha256",
-				"writer_asset_set_sha256"
-			]
-			const releaseKeys = lock.release && typeof lock.release === "object" && !Array.isArray(lock.release)
-				? Object.keys(lock.release).sort()
-				: []
-			if (
-				JSON.stringify(releaseKeys) !== JSON.stringify(expectedReleaseKeys) ||
-				lock.release.tag !== moduleVersion ||
-				!/^[0-9a-f]{64}$/.test(lock.release.manifest_sha256 || "") ||
-				lock.release.manifest !== `malt-wasm-release-${moduleVersion}-${lock.release.manifest_sha256}.json` ||
-				!/^([0-9a-f]{64})$/.test(lock.release.verifier_asset_set_sha256 || "") ||
-				!/^([0-9a-f]{64})$/.test(lock.release.writer_asset_set_sha256 || "")
-			) {
-				throw new Error(`malt-ts Core release metadata does not match ${moduleVersion}`)
 			}
 
 			const sumLines = fs.readFileSync(path.join(process.env.REPO_ROOT, "go.sum"), "utf8")
@@ -103,7 +86,7 @@ lock_fields="$(
 					(fields) => fields.length === 3 && fields[0] === modulePath && fields[1] === versionField
 				)
 				if (matches.length !== 1 || !/^h1:[A-Za-z0-9+/]+={0,2}$/.test(matches[0][2])) {
-					throw new Error(`gateway/go.sum must contain exactly one valid ${modulePath} ${versionField} entry`)
+					throw new Error(`malt-ts/go.sum must contain exactly one valid ${modulePath} ${versionField} entry`)
 				}
 				return matches[0][2]
 			}

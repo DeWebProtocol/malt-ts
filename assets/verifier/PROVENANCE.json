@@ -1,7 +1,7 @@
 {
   "schema": "malt.ts-verifier.provenance/v1",
   "source_repository": "https://github.com/DeWebProtocol/malt-ts.git",
-  "build_inputs_sha256": "36bf6cd00a11f8da7a425d8a1ce8ca1265080e05dceb3906b5a7edd7a2255117",
+  "build_inputs_sha256": "e572d2e4eecde327d0daad7db48d80f54821aeb53ffbdd406ca4424ccaf6ae8a",
   "core": {
     "module_path": "github.com/dewebprotocol/malt-core",
     "module_version": "v0.0.9-rc.5",
@@ -17,6 +17,7 @@
   "go_version": "go1.26.0",
   "go_toolchain": "go version go1.26.0 linux/amd64",
   "build_flags": [
+    "-p=6",
     "-mod=readonly",
     "-buildvcs=false",
     "-trimpath"

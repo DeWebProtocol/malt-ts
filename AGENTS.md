@@ -6,6 +6,10 @@ This repository owns the stable TypeScript/JavaScript distribution of MALT:
 public browser APIs, type declarations, Worker lifecycle, reproducible browser
 WASM packaging, npm documentation, and bundler integration.
 
+This is the sole owner of Go/WASM entrypoints, compilation, browser conformance
+runners, and WASM release archives. Core provides the Go SDK and portable test
+vectors; do not depend on Core-owned WASM commands, scripts, or release assets.
+
 Also follow the workspace guide at `../AGENTS.md` when this checkout is part of
 the combined MALT workspace.
 
@@ -38,7 +42,8 @@ the combined MALT workspace.
 - Run `npm test`, `npm run typecheck`, and `npm run check:assets` for package
   changes.
 - Run `make audit-core-release` when changing or validating the Core lock; it
-  must verify both the remote tag and the published GitHub Release manifest.
+  must verify the exact remote tag, Go module checksums, and a published
+  non-draft GitHub Release. Core is a source dependency, not a WASM publisher.
 - Run `make test-wasm` for Go/WASM ABI or asset changes. On the shared 8-CPU
   host, use the workspace resource-limited transient scope for this heavy
   workload.

@@ -20,8 +20,8 @@ if [[ -z "${malt_version}" || ! -d "${malt_module_dir}" ]]; then
 fi
 
 for runner in run-authentication-wasm.mjs run-retained-writer-wasm.mjs run-authentication-batch-wasm.mjs; do
- [[ -f "${malt_module_dir}/scripts/${runner}" ]] || {
-  printf 'pinned Core release does not provide the current authentication runner: %s\n' "${runner}" >&2
+ [[ -f "${repo_root}/scripts/${runner}" ]] || {
+  printf 'malt-ts is missing an authentication runner: %s\n' "${runner}" >&2
   exit 1
  }
 done
@@ -31,9 +31,12 @@ for profile in kzg direct compact fast; do
  wasm="${writer_root}/malt-writer-ipa-${profile}.wasm"
  profile_arg="${profile}"
  if [[ "${profile}" == kzg ]]; then backend=kzg; wasm="${writer_root}/malt-writer-kzg.wasm"; profile_arg=; fi
- node "${malt_module_dir}/scripts/run-authentication-wasm.mjs" writer "${wasm}" "${writer_root}/wasm_exec.js" "${malt_module_dir}/conformance/authentication-v1.json" "${backend}"
- node "${malt_module_dir}/scripts/run-retained-writer-wasm.mjs" "${wasm}" "${writer_root}/wasm_exec.js" "${backend}" "${profile_arg}"
- node "${malt_module_dir}/scripts/run-authentication-batch-wasm.mjs" "${wasm}" "${writer_root}/wasm_exec.js" "${backend}" "${profile_arg}"
+ node "${repo_root}/scripts/run-authentication-wasm.mjs" writer "${wasm}" "${writer_root}/wasm_exec.js" "${malt_module_dir}/conformance/authentication-v1.json" "${backend}"
+ node "${repo_root}/scripts/run-retained-writer-wasm.mjs" "${wasm}" "${writer_root}/wasm_exec.js" "${backend}" "${profile_arg}"
+ node "${repo_root}/scripts/run-authentication-batch-wasm.mjs" "${wasm}" "${writer_root}/wasm_exec.js" "${backend}" "${profile_arg}"
 done
-node "${repo_root}/scripts/run-authentication-router-smoke.mjs" "${writer_root}" "${malt_module_dir}/scripts/run-writer-worker-node.mjs"
+node "${repo_root}/scripts/run-authentication-router-smoke.mjs" "${writer_root}" "${repo_root}/scripts/run-writer-worker-node.mjs"
+node "${repo_root}/scripts/run-writer-worker-smoke.mjs" \
+ "${writer_root}/malt-writer-ipa-compact.wasm" "${writer_root}/wasm_exec.js" \
+ "${writer_root}/malt-writer-workers.mjs" "${writer_root}/malt-writer-worker.mjs" ipa compact
 printf 'malt-ts writer passes MALT %s conformance.\n' "${malt_version}"

@@ -39,7 +39,7 @@ parameters_json="$(
 	env -u GOROOT -u GOOS -u GOARCH GO111MODULE=on \
 		GOENV=off GOWORK=off GOFLAGS= GOTOOLCHAIN="${go_toolchain}" \
 		GOEXPERIMENT=none GOWASM= GOFIPS140=off CGO_ENABLED=0 \
-		"${go_binary}" run -mod=readonly ./cmd/malt-ipa-parameters
+		"${go_binary}" run -p=6 -mod=readonly ./cmd/malt-ipa-parameters
 )"
 
 IPA_PARAMETERS_JSON="${parameters_json}" node -e '
