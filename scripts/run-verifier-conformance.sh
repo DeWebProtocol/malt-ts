@@ -19,7 +19,9 @@ if [[ -z "${malt_version}" || ! "${malt_commit}" =~ ^[0-9a-f]{40}$ || \
 	exit 1
 fi
 
-node "${malt_module_dir}/scripts/run-authentication-wasm.mjs" verifier \
+for backend in all kzg ipa; do
+	node "${repo_root}/scripts/run-authentication-wasm.mjs" verifier \
 	"${verifier_root}/malt-verifier.wasm" "${verifier_root}/wasm_exec.js" \
-	"${malt_module_dir}/conformance/authentication-v1.json" all
+	"${malt_module_dir}/conformance/authentication-v1.json" "${backend}"
+done
 printf 'malt-ts verifier passes the MALT %s conformance corpus.\n' "${malt_version}"

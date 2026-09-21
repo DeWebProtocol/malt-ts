@@ -17,6 +17,7 @@ const expectedDirectoryEntries = Object.freeze([
 ])
 
 const expectedBuildFlags = Object.freeze([
+  '-p=6',
   '-mod=readonly',
   '-buildvcs=false',
   '-trimpath'

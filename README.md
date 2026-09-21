@@ -15,7 +15,9 @@ The package asset binding is `0.0.2-rc.5`, built against the published
 `malt-core v0.0.9-rc.5` release at commit
 `8a04f060d307d6b3ffec2d8b3fafb057eb9ac653`.
 [`malt-core.lock.json`](./malt-core.lock.json) binds that tag, commit, Go module
-checksums, formal Core WASM release manifest, and Core asset-set digests.
+checksums. The `malt.ts-core-lock/v2` lock binds Core source only; Core WASM
+assets are not required. This repository exclusively owns WASM entrypoints,
+compilation, integration runners, Worker lifecycle, and distribution.
 
 Release builds must never resolve a mutable Core branch or `latest` alias. A
 new Core release is adopted through a lock-file change and conformance run
@@ -160,7 +162,7 @@ current ABI. There are no forwarding aliases or optional old-runtime exports.
 
 The `malt-core.lock.json` and packaged binary assets identify the published
 Core `v0.0.9-rc.5` release. Its current host and batch APIs are bound to the
-exact release tag, source commit, module checksums, and formal WASM manifest.
+exact release tag, source commit, and module checksums.
 Source integration checks remain separate from this published release binding.
 
 Validate both source checkouts under the workspace CPU scope:
@@ -175,3 +177,21 @@ Core conformance and retained-writer/batch tests for all committer profiles,
 and exercises the real browser router against a Worker. These are development
 artifacts, separate from a package release. `make test-wasm` applies the same
 current contracts to the exact release selected by the lock.
+
+### WASM ownership and archives
+
+Core provides the Go SDK, cryptographic parameter metadata, and portable
+`conformance/authentication-v1.json` corpus. All JavaScript/WASM runners live
+in this repository; tests never execute a Core-owned browser build or runner.
+`make test-wasm` tests the pinned published Core release. For a proposed Core
+source change, use the explicit non-release `scripts/test-core-source.sh`.
+
+`make wasm-release` builds reproducible archives from a clean, exact malt-ts
+commit. `make test-wasm-release` also checks adversarial archive fixtures. The
+manifest uses `malt.ts-wasm-release/v1`, identifies this package and source
+commit, and separately binds the exact Core dependency and corpus digest.
+See [WASM release assets](docs/wasm-release-assets.md).
+
+`maltCoreRelease` exposes the Core version, commit, `moduleSum`, and `goModSum`.
+The former Core WASM manifest/asset-set properties are removed. Consumers use
+this package's asset checksums and build provenance for the WASM it distributes.

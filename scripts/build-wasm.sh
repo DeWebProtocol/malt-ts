@@ -123,13 +123,13 @@ ipa_parameters_json="$("${repo_root}/scripts/read-core-ipa-parameters.sh" "${mal
 (
 	cd "${repo_root}"
 	"${go_command[@]}" mod verify
-	"${wasm_go_command[@]}" build -mod=readonly -buildvcs=false -trimpath \
+	"${wasm_go_command[@]}" build -p=6 -mod=readonly -buildvcs=false -trimpath \
 		-o "${verifier_staging}/malt-verifier.wasm" ./cmd/malt-verifier-wasm
-	"${wasm_go_command[@]}" build -mod=readonly -buildvcs=false -trimpath \
+	"${wasm_go_command[@]}" build -p=6 -mod=readonly -buildvcs=false -trimpath \
 		-tags=writer_kzg \
 		-o "${writer_staging}/malt-writer-kzg.wasm" ./cmd/malt-writer-wasm
 	for profile in direct compact fast; do
-		"${wasm_go_command[@]}" build -mod=readonly -buildvcs=false -trimpath \
+		"${wasm_go_command[@]}" build -p=6 -mod=readonly -buildvcs=false -trimpath \
 			-tags=writer_ipa,malt_no_default_kzg \
 			-ldflags="-X=main.ipaCommitterProfile=${profile}" \
 			-o "${writer_staging}/malt-writer-ipa-${profile}.wasm" \
@@ -170,7 +170,7 @@ PROVENANCE_PATH="${verifier_staging}/PROVENANCE.json" node -e '
 		],
 		go_version: process.env.GO_VERSION,
 		go_toolchain: process.env.GO_TOOLCHAIN,
-		build_flags: ["-mod=readonly", "-buildvcs=false", "-trimpath"],
+		build_flags: ["-p=6", "-mod=readonly", "-buildvcs=false", "-trimpath"],
 		build_environment: {
 			GO111MODULE: "on", GOENV: "off", GOWORK: "off",
 			GOFLAGS: "", GOTOOLCHAIN: "local"
@@ -217,7 +217,7 @@ PROVENANCE_PATH="${writer_staging}/PROVENANCE.json" node -e '
 		parameters: JSON.parse(process.env.IPA_PARAMETERS_JSON),
 		go_version: process.env.GO_VERSION,
 		go_toolchain: process.env.GO_TOOLCHAIN,
-		build_flags: ["-mod=readonly", "-buildvcs=false", "-trimpath"],
+		build_flags: ["-p=6", "-mod=readonly", "-buildvcs=false", "-trimpath"],
 		artifacts: {
 			kzg: {file: "malt-writer-kzg.wasm", build_tags: ["writer_kzg"]},
 			ipa: {

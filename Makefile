@@ -1,4 +1,4 @@
-.PHONY: test test-js typecheck audit-core-release wasm check-wasm test-wasm
+.PHONY: test test-js typecheck audit-core-release wasm check-wasm test-wasm wasm-release test-wasm-release
 
 WASM_OUT ?= assets
 
@@ -22,3 +22,9 @@ check-wasm:
 test-wasm: wasm check-wasm
 	./scripts/run-verifier-conformance.sh "$(WASM_OUT)/verifier"
 	./scripts/run-writer-conformance.sh "$(WASM_OUT)/writer"
+
+wasm-release:
+	./scripts/build-wasm-release.sh
+
+test-wasm-release: wasm-release
+	node scripts/test-wasm-release-adversarial.mjs dist/wasm-release

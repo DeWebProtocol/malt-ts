@@ -70,7 +70,7 @@ MALT_SUM="${malt_module_sum}" MALT_GO_MOD_SUM="${malt_go_mod_sum}" \
 		module_sum: process.env.MALT_SUM,
 		go_mod_sum: process.env.MALT_GO_MOD_SUM
 	}
-	const expectedFlags = ["-mod=readonly", "-buildvcs=false", "-trimpath"]
+	const expectedFlags = ["-p=6", "-mod=readonly", "-buildvcs=false", "-trimpath"]
 	const expectedEnvironment = {
 		GO111MODULE: "on", GOENV: "off", GOWORK: "off", GOFLAGS: "", GOTOOLCHAIN: "local"
 	}
