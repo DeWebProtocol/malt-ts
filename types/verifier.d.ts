@@ -8,9 +8,6 @@ export interface VerificationResult extends JSONRecord {
 }
 
 export interface BrowserVerifierProvider {
-  resolve(json: string, signal?: AbortSignal): Promise<string>
-  read(json: string, signal?: AbortSignal): Promise<string>
-  mapProof(json: string, signal?: AbortSignal): Promise<string>
   authentication(json: string, signal?: AbortSignal): Promise<string>
   terminate(): void
 }
@@ -35,34 +32,9 @@ export interface LocalVerificationOptions {
   provider?: BrowserVerifierProvider
 }
 
-export declare const resolveVerifierProfile: 'malt.resolve/v0alpha1'
-export declare const readVerifierProfile: 'malt.read/v0alpha1'
-export declare const mapProofVerifierProfile: 'malt.map-proof/v0alpha1'
 export declare const defaultVerifierRuntimeURL: string
 export declare const defaultVerifierWASMURL: string
 
-export declare function verifyResolveLocally(options: LocalVerificationOptions): Promise<VerificationResult>
-export declare function verifyReadLocally(options: LocalVerificationOptions): Promise<VerificationResult>
-export declare function verifyMapProofLocally(options: LocalVerificationOptions): Promise<VerificationResult>
-export declare function verifyContentProofLocally(options: {
-  proofList: JSONRecord
-  expectedRoot: string
-  expectedPath?: string
-  runtimeURL?: string | URL
-  wasmURL?: string | URL
-  signal?: AbortSignal
-  provider?: BrowserVerifierProvider
-}): Promise<VerificationResult & { resolve?: VerificationResult; reads?: VerificationResult[] }>
-export declare function createResolveVerification(options: Pick<LocalVerificationOptions, 'request' | 'result'>): JSONRecord
-export declare function createReadVerification(options: Pick<LocalVerificationOptions, 'request' | 'result'>): JSONRecord
-export declare function createMapProofVerification(options: Pick<LocalVerificationOptions, 'request' | 'result'>): JSONRecord
-export declare function resolveVerificationFromProofList(options: {
-  proofList: JSONRecord
-  root: string
-  path?: string
-  payload?: boolean | 'auto'
-}): { request: JSONRecord; result: JSONRecord }
-export declare function readVerificationsFromProofList(proofList: JSONRecord): Array<{ request: JSONRecord; result: JSONRecord }>
 export declare function createBrowserVerifierLease(): VerifierLease
 export declare function loadBrowserVerifier(options?: VerifierLoadOptions): Promise<BrowserVerifierProvider>
 export declare function releaseBrowserVerifier(lease: VerifierLease): void
@@ -74,7 +46,7 @@ export type AuthenticationInput =
   | { kind: 'key'; data: string }
   | { kind: 'label'; data: string }
 export interface AuthenticationRequest extends JSONRecord {
-  profile: 'malt.authentication/0' | 'malt.authentication/1'
+  profile: 'malt.authentication/1'
   root: string
   steps?: AuthenticationInput[] | null
   operation: 'resolve' | 'binding' | 'range'
@@ -82,7 +54,6 @@ export interface AuthenticationRequest extends JSONRecord {
   start?: string
   end?: string
 }
-export declare const authenticationVerifierProfile: 'malt.authentication/0'
 export declare const authenticationPathVerifierProfile: 'malt.authentication/1'
 export declare function createAuthenticationVerification(options: {
   request: AuthenticationRequest; result: JSONRecord

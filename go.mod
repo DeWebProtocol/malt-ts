@@ -2,15 +2,13 @@ module github.com/dewebprotocol/malt-ts
 
 go 1.26.0
 
-require (
-	github.com/dewebprotocol/malt-core v0.0.9-rc.3
-	github.com/ipfs/go-cid v0.6.2
-)
+require github.com/dewebprotocol/malt-core v0.0.9-rc.4
 
 require (
 	github.com/bits-and-blooms/bitset v1.24.6 // indirect
 	github.com/consensys/gnark-crypto v0.21.0 // indirect
 	github.com/crate-crypto/go-kzg-4844 v1.1.0 // indirect
+	github.com/ipfs/go-cid v0.6.2 // indirect
 	github.com/klauspost/cpuid/v2 v2.3.0 // indirect
 	github.com/minio/sha256-simd v1.0.1 // indirect
 	github.com/mr-tron/base58 v1.3.0 // indirect

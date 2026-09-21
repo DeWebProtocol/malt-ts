@@ -33,17 +33,9 @@ function fakeRuntime(target, {
     ready,
     fatal,
     status: vi.fn(() => ({ ...target, ...runtimeState })),
-    bootstrap: vi.fn(async () => '{}'),
-    load: vi.fn(async () => 'root'),
-    snapshot: vi.fn(async () => '{"profile":"malt.ts.writer-session-snapshot/v1"}'),
-    restore: vi.fn(async () => '{"profile":"malt.update-view/v1"}'),
-    prepare: vi.fn(async () => 'candidate'),
-    getPreparedResult: vi.fn(async () => '{}'),
-    validateReceipt: vi.fn(async () => 'candidate'),
-    acceptReceipt: vi.fn(async () => 'candidate'),
-    discard: vi.fn(async () => 'operation'),
-    closeSession: vi.fn(async () => {}),
-    prepareAuthentication: vi.fn(async () => '{}'),
+    validateAuthenticationBatch: vi.fn(async () => 'digest'),
+    validateAuthenticationReceipt: vi.fn(async () => 'candidate'),
+    prepareAuthentication: vi.fn(async () => 'candidate'),
     updateAuthentication: vi.fn(async () => '{}'),
     createAuthentication: vi.fn(newHandle),
     importAuthentication: vi.fn(newHandle),
@@ -51,7 +43,6 @@ function fakeRuntime(target, {
     exportAuthentication: vi.fn(async () => '{}'),
     discardAuthentication: vi.fn(async () => '{}'),
     closeAuthentication: vi.fn(async () => '{}'),
-    compute: vi.fn(async () => '{}'),
     terminate: vi.fn()
   }
 }
@@ -132,7 +123,7 @@ describe('browser MALT writer initialization phases', () => {
     expect(worker.terminate).toHaveBeenCalledOnce()
   })
 
-  it('transfers an exact update-view buffer into the stateful Worker load request', async () => {
+  it('transfers an exact candidate buffer into the retained Worker import request', async () => {
     const listeners = new Map()
     const worker = {
       postMessage: vi.fn(),
@@ -155,14 +146,14 @@ describe('browser MALT writer initialization phases', () => {
     await runtime.ready
 
     const bytes = new Uint8Array([1, 2, 3])
-    const loading = runtime.load('kzg', bytes)
+    const loading = runtime.importAuthentication('kzg', bytes)
     await vi.waitFor(() => expect(worker.postMessage).toHaveBeenCalledTimes(2))
     const [request, transfer] = worker.postMessage.mock.calls.at(-1)
     expect(request).toMatchObject({
       type: 'request',
       backend: 'kzg',
       profile: '',
-      method: 'load',
+      method: 'importAuthentication',
       args: [bytes]
     })
     expect(transfer).toEqual([bytes.buffer])
@@ -197,7 +188,7 @@ describe('browser MALT writer initialization phases', () => {
       })
     })
 
-    await writer.bootstrap('kzg')
+    await writer.createAuthentication('kzg', new Uint8Array([1]))
     expect(statuses.map(({ phase }) => phase).filter(Boolean)).toEqual([
       'checking-release',
       'fetching-wasm',
@@ -219,12 +210,12 @@ describe('browser MALT writer lazy router', () => {
     expect(harness.attempts).toHaveLength(0)
     expect(writer.status('kzg').state).toBe('idle')
 
-    await writer.bootstrap('kzg')
+    await writer.createAuthentication('kzg', new Uint8Array([1]))
     expect(harness.attempts).toHaveLength(1)
     expect(harness.attempts[0]).toMatchObject({ backend: 'kzg', profile: '' })
-    await writer.closeSession('kzg')
+    await writer.closeAuthentication('kzg')
 
-    await writer.load('ipa', new Uint8Array())
+    await writer.importAuthentication('ipa', new Uint8Array())
     expect(harness.attempts).toHaveLength(2)
     expect(harness.attempts[1]).toMatchObject({ backend: 'ipa', profile: 'compact' })
     expect(harness.runtimes[0].terminate).toHaveBeenCalledOnce()
@@ -232,26 +223,16 @@ describe('browser MALT writer lazy router', () => {
     expect(writer.status('kzg').state).toBe('idle')
   })
 
-	it('routes authenticated snapshot restore and export through the active stateful Worker', async () => {
-		const harness = loaderHarness()
-		const writer = await harness.writer
-		const snapshot = new Uint8Array([1, 2, 3])
-		const secret = new Uint8Array(32).fill(9)
-
-		await writer.restore('kzg', snapshot, secret)
-		expect(harness.attempts).toEqual([
-			expect.objectContaining({ backend: 'kzg', profile: '' })
-		])
-		expect(harness.runtimes[0].restore).toHaveBeenCalledWith(
-			'kzg',
-			snapshot,
-			secret
-		)
-
-		await writer.snapshot('kzg', secret)
-		expect(harness.runtimes[0].snapshot).toHaveBeenCalledWith('kzg', secret)
-		expect(harness.attempts).toHaveLength(1)
-	})
+	it('imports a verified candidate and exports it through its retained Worker', async () => {
+  const harness = loaderHarness(), writer = await harness.writer, candidate = new Uint8Array([1, 2, 3])
+  const imported = JSON.parse(await writer.importAuthentication('kzg', candidate))
+  const handle = new TextEncoder().encode(imported.handle)
+  expect(harness.runtimes[0].importAuthentication).toHaveBeenCalledWith('kzg', candidate)
+  await writer.exportAuthentication('kzg', handle)
+  expect(harness.runtimes[0].exportAuthentication).toHaveBeenCalledWith('kzg', new TextEncoder().encode('1'))
+  expect(harness.attempts).toHaveLength(1)
+  writer.terminate()
+})
 
   it('falls back only within IPA and never constructs KZG for an IPA request', async () => {
     const harness = loaderHarness({
@@ -260,7 +241,7 @@ describe('browser MALT writer lazy router', () => {
       fail: new Set(['ipa/fast', 'ipa/compact'])
     })
     const writer = await harness.writer
-    await writer.load('ipa', new Uint8Array())
+    await writer.importAuthentication('ipa', new Uint8Array())
     expect(harness.attempts.map(({ backend, profile }) => `${backend}/${profile}`)).toEqual([
       'ipa/fast',
       'ipa/compact',
@@ -276,7 +257,7 @@ describe('browser MALT writer lazy router', () => {
       fail: new Set(['ipa/fast', 'ipa/compact', 'ipa/direct'])
     })
     const writer = await harness.writer
-    await expect(writer.load('ipa', new Uint8Array())).rejects.toThrow('ipa/direct unavailable')
+    await expect(writer.importAuthentication('ipa', new Uint8Array())).rejects.toThrow('ipa/direct unavailable')
     expect(harness.attempts.every(({ backend }) => backend === 'ipa')).toBe(true)
     expect(writer.status('ipa').state).toBe('failed')
   })
@@ -284,8 +265,8 @@ describe('browser MALT writer lazy router', () => {
   it('does not switch backend while a writer session is active', async () => {
     const harness = loaderHarness()
     const writer = await harness.writer
-    await writer.bootstrap('kzg')
-    await expect(writer.load('ipa', new Uint8Array())).rejects.toThrow('session is active')
+    await writer.createAuthentication('kzg', new Uint8Array([1]))
+    await expect(writer.importAuthentication('ipa', new Uint8Array())).rejects.toThrow('session is active')
     expect(harness.attempts).toHaveLength(1)
   })
 
@@ -299,7 +280,7 @@ describe('browser MALT writer lazy router', () => {
         { backend: 'ipa', profile: 'compact' },
         { runtimeState: failedState }
       )
-      failedRuntime.prepare.mockImplementationOnce(async () => {
+      failedRuntime.prepareAuthentication.mockImplementationOnce(async () => {
         failedState.state = 'failed'
         failedState.error = `simulated Worker ${failureSource}`
         throw new Error(`pending RPC rejected after ${failureSource}`)
@@ -317,13 +298,13 @@ describe('browser MALT writer lazy router', () => {
         })
       })
 
-      await writer.load('ipa', new Uint8Array())
-      await expect(writer.prepare('ipa', 'operation', new Uint8Array())).rejects.toThrow(
+      await writer.importAuthentication('ipa', new Uint8Array())
+      await expect(writer.prepareAuthentication('ipa', new Uint8Array())).rejects.toThrow(
         `pending RPC rejected after ${failureSource}`
       )
 
-      expect(failedRuntime.prepare).toHaveBeenCalledOnce()
-      expect(replacementRuntime.prepare).not.toHaveBeenCalled()
+      expect(failedRuntime.prepareAuthentication).toHaveBeenCalledOnce()
+      expect(replacementRuntime.prepareAuthentication).not.toHaveBeenCalled()
       expect(attempts).toHaveLength(1)
       expect(failedRuntime.terminate).toHaveBeenCalledOnce()
       expect(writer.status('ipa')).toMatchObject({
@@ -339,23 +320,23 @@ describe('browser MALT writer lazy router', () => {
 
       // The fatal Worker lost its in-memory session. The next explicit call may
       // select another backend, and only that call creates a replacement.
-      await writer.bootstrap('kzg')
+      await writer.createAuthentication('kzg', new Uint8Array([1]))
       expect(attempts).toHaveLength(2)
       expect(attempts[1]).toMatchObject({ backend: 'kzg', profile: '' })
-      expect(replacementRuntime.bootstrap).toHaveBeenCalledOnce()
+      expect(replacementRuntime.createAuthentication).toHaveBeenCalledOnce()
     }
   )
 
   it('keeps a ready Worker after an ordinary request error', async () => {
     const harness = loaderHarness()
     const writer = await harness.writer
-    await writer.load('ipa', new Uint8Array())
-    harness.runtimes[0].prepare
+    await writer.importAuthentication('ipa', new Uint8Array())
+    harness.runtimes[0].prepareAuthentication
       .mockRejectedValueOnce(new Error('invalid operation'))
       .mockResolvedValueOnce('candidate')
 
-    await expect(writer.prepare('ipa', 'bad', new Uint8Array())).rejects.toThrow('invalid operation')
-    await expect(writer.prepare('ipa', 'good', new Uint8Array())).resolves.toBe('candidate')
+    await expect(writer.prepareAuthentication('ipa', new Uint8Array())).rejects.toThrow('invalid operation')
+    await expect(writer.prepareAuthentication('ipa', new Uint8Array())).resolves.toBe('candidate')
 
     expect(harness.attempts).toHaveLength(1)
     expect(harness.runtimes[0].terminate).not.toHaveBeenCalled()
@@ -384,7 +365,7 @@ describe('browser MALT writer lazy router', () => {
       })
     })
 
-    await writer.load('ipa', new Uint8Array())
+    await writer.importAuthentication('ipa', new Uint8Array())
     runtimeState.state = 'failed'
     runtimeState.error = 'idle Worker crashed'
     fatal.resolve(new Error('idle Worker crashed'))
@@ -402,9 +383,9 @@ describe('browser MALT writer lazy router', () => {
       error: 'idle Worker crashed'
     }))
 
-    await writer.bootstrap('kzg')
+    await writer.createAuthentication('kzg', new Uint8Array([1]))
     expect(attempts).toHaveLength(2)
-    expect(replacementRuntime.bootstrap).toHaveBeenCalledOnce()
+    expect(replacementRuntime.createAuthentication).toHaveBeenCalledOnce()
   })
 
   it('ignores a fatal signal from a runtime that has already been replaced', async () => {
@@ -426,9 +407,9 @@ describe('browser MALT writer lazy router', () => {
       })
     })
 
-    await writer.load('ipa', new Uint8Array())
-    await writer.closeSession('ipa')
-    await writer.bootstrap('kzg')
+    await writer.importAuthentication('ipa', new Uint8Array())
+    await writer.closeAuthentication('ipa')
+    await writer.createAuthentication('kzg', new Uint8Array([1]))
     fatal.resolve(new Error('stale fatal'))
     await new Promise((resolve) => setImmediate(resolve))
 
@@ -446,7 +427,7 @@ describe('browser MALT writer lazy router', () => {
       { backend: 'ipa', profile: 'compact' },
       { runtimeState }
     )
-    failedRuntime.closeSession.mockImplementationOnce(async () => {
+    failedRuntime.closeAuthentication.mockImplementationOnce(async () => {
       runtimeState.state = 'failed'
       runtimeState.error = 'Worker crashed during close'
       throw new Error('close request rejected')
@@ -464,8 +445,8 @@ describe('browser MALT writer lazy router', () => {
       })
     })
 
-    await writer.load('ipa', new Uint8Array())
-    await expect(writer.closeSession('ipa')).rejects.toThrow('close request rejected')
+    await writer.importAuthentication('ipa', new Uint8Array())
+    await expect(writer.closeAuthentication('ipa')).rejects.toThrow('close request rejected')
 
     expect(failedRuntime.terminate).toHaveBeenCalledOnce()
     expect(writer.status('ipa')).toMatchObject({
@@ -480,19 +461,19 @@ describe('browser MALT writer lazy router', () => {
     }))
 
     // No stateful close is replayed. A later explicit operation may rebuild.
-    await writer.bootstrap('kzg')
+    await writer.createAuthentication('kzg', new Uint8Array([1]))
     expect(attempts).toHaveLength(2)
-    expect(replacementRuntime.bootstrap).toHaveBeenCalledOnce()
+    expect(replacementRuntime.createAuthentication).toHaveBeenCalledOnce()
   })
 
   it('keeps a ready Worker after an ordinary close-session error', async () => {
     const harness = loaderHarness()
     const writer = await harness.writer
-    await writer.load('ipa', new Uint8Array())
-    harness.runtimes[0].closeSession.mockRejectedValueOnce(new Error('session already closed'))
+    await writer.importAuthentication('ipa', new Uint8Array())
+    harness.runtimes[0].closeAuthentication.mockRejectedValueOnce(new Error('session already closed'))
 
-    await expect(writer.closeSession('ipa')).rejects.toThrow('session already closed')
-    await expect(writer.prepare('ipa', 'operation', new Uint8Array())).resolves.toBe('candidate')
+    await expect(writer.closeAuthentication('ipa')).rejects.toThrow('session already closed')
+    await expect(writer.prepareAuthentication('ipa', new Uint8Array())).resolves.toBe('candidate')
 
     expect(harness.attempts).toHaveLength(1)
     expect(harness.runtimes[0].terminate).not.toHaveBeenCalled()
@@ -520,17 +501,17 @@ describe('browser MALT writer lazy router', () => {
           })
         })
       })
-      await writer.load('ipa', new Uint8Array([1]))
+      await writer.importAuthentication('ipa', new Uint8Array([1]))
       first.status.mockImplementation(unhealthyStatus)
 
       // The health check must run before the stale IPA session can block KZG.
-      await writer.bootstrap('kzg')
+      await writer.createAuthentication('kzg', new Uint8Array([1]))
 
       expect(attempts).toHaveLength(2)
       expect(attempts[1]).toMatchObject({ backend: 'kzg', profile: '' })
-      expect(first.load).toHaveBeenCalledOnce()
-      expect(first.bootstrap).not.toHaveBeenCalled()
-      expect(second.bootstrap).toHaveBeenCalledOnce()
+      expect(first.importAuthentication).toHaveBeenCalledOnce()
+      expect(first.createAuthentication).not.toHaveBeenCalled()
+      expect(second.createAuthentication).toHaveBeenCalledOnce()
       expect(first.terminate).toHaveBeenCalledOnce()
     }
   )
@@ -546,7 +527,7 @@ describe('browser MALT writer lazy router', () => {
         importController: async () => ({ createMaltWriterWorker: async () => runtime })
       })
 
-      await expect(writer.bootstrap('kzg')).rejects.toThrow('invalid single-Worker runtime')
+      await expect(writer.createAuthentication('kzg', new Uint8Array([1]))).rejects.toThrow('invalid single-Worker runtime')
       expect(runtime.terminate).toHaveBeenCalledOnce()
     }
   )
@@ -567,7 +548,7 @@ describe('browser MALT writer lazy router', () => {
         }
       })
     })
-    const loading = writer.load('ipa', new Uint8Array())
+    const loading = writer.importAuthentication('ipa', new Uint8Array())
     await vi.waitFor(() => expect(attempts).toHaveLength(1))
     await Promise.resolve()
     writer.terminate()
@@ -593,7 +574,7 @@ describe('browser MALT writer lazy router', () => {
         }
       })
     })
-    const loading = writer.load('ipa', new Uint8Array())
+    const loading = writer.importAuthentication('ipa', new Uint8Array())
     await vi.waitFor(() => expect(signal).toBeInstanceOf(AbortSignal))
     writer.terminate()
     expect(signal.aborted).toBe(true)
@@ -617,7 +598,7 @@ describe('browser MALT writer lazy router', () => {
         }
       })
     })
-    const loading = writer.load('ipa', new Uint8Array())
+    const loading = writer.importAuthentication('ipa', new Uint8Array())
     await vi.waitFor(() => expect(attempts).toHaveLength(1))
 
     writer.terminate()
@@ -648,7 +629,7 @@ describe('browser MALT writer lazy router', () => {
       },
       importController: async () => ({ createMaltWriterWorker: create })
     })
-    const loading = writer.load('ipa', new Uint8Array())
+    const loading = writer.importAuthentication('ipa', new Uint8Array())
     await vi.waitFor(() => expect(writer.status('ipa').state).toBe('loading'))
     writer.terminate()
     expect(guardSignal.aborted).toBe(true)
@@ -672,7 +653,7 @@ describe('browser MALT writer lazy router', () => {
       beforeWorkerStart: async () => { throw new Error('Console release changed') },
       importController: async () => ({ createMaltWriterWorker: create })
     })
-    await expect(writer.load('ipa', new Uint8Array())).rejects.toThrow('Console release changed')
+    await expect(writer.importAuthentication('ipa', new Uint8Array())).rejects.toThrow('Console release changed')
     expect(create).not.toHaveBeenCalled()
     expect(writer.status('ipa')).toMatchObject({ state: 'failed', profile: 'fast' })
   })
@@ -693,7 +674,7 @@ it('routes typed candidates through the selected Worker without changing byte in
   writer.terminate()
 })
 
-it.each(['prepareAuthentication', 'updateAuthentication', 'applyAuthentication', 'exportAuthentication'])(
+it.each(['validateAuthenticationBatch', 'validateAuthenticationReceipt', 'prepareAuthentication', 'updateAuthentication', 'applyAuthentication', 'exportAuthentication'])(
   'rejects a controller missing the current %s method before ready', async (method) => {
     const runtime = fakeRuntime({ backend: 'kzg', profile: '' })
     delete runtime[method]
@@ -740,7 +721,6 @@ it('pins the authentication backend during pending create and until explicit clo
   expect(harness.runtimes[0].terminate).not.toHaveBeenCalled()
   created.resolve('{"handle":"1","root":"root"}')
   await creating
-  await writer.closeSession('kzg')
   await expect(writer.whenReady('ipa')).rejects.toThrow('authentication session is active')
   await writer.closeAuthentication('kzg')
   await writer.whenReady('ipa')
@@ -748,19 +728,15 @@ it('pins the authentication backend during pending create and until explicit clo
   writer.terminate()
 })
 
-it('serializes authentication close/create and preserves the independent semantic session pin', async () => {
-  const harness = loaderHarness()
-  const writer = await harness.writer
-  await writer.bootstrap('kzg')
+it('serializes close/create and retains the new authentication session', async () => {
+  const harness = loaderHarness(), writer = await harness.writer
   await writer.createAuthentication('kzg', new Uint8Array([1]))
   const closing = writer.closeAuthentication('kzg')
   const creating = writer.createAuthentication('kzg', new Uint8Array([1]))
   await Promise.all([closing, creating])
-  await writer.closeSession('kzg')
   await expect(writer.whenReady('ipa')).rejects.toThrow('authentication session is active')
-  await writer.bootstrap('kzg')
   await writer.closeAuthentication('kzg')
-  await expect(writer.whenReady('ipa')).rejects.toThrow('writer session is active')
+  await writer.whenReady('ipa')
   writer.terminate()
 })
 

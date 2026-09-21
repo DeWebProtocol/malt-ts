@@ -46,30 +46,22 @@ export declare class BrowserMaltWriterRouter {
   status(backend: MaltBackend): WriterStatus
   whenReady(backend: MaltBackend): Promise<unknown>
   /** Compute a complete typed ArcSet candidate; never publishes or accepts it. */
+  validateAuthenticationBatch(backend: MaltBackend, batchJSON: Uint8Array): Promise<string>
+  /** Validate the exact persistence acknowledgement; never accepts a trusted Root. */
+  validateAuthenticationReceipt(backend: MaltBackend, batchJSON: Uint8Array, receiptJSON: Uint8Array): Promise<string>
   prepareAuthentication(backend: MaltBackend, stateJSON: Uint8Array): Promise<string>
   /** Verify the complete base and reuse unaffected authentication paths. */
   updateAuthentication(backend: MaltBackend, candidateJSON: Uint8Array, stateJSON: Uint8Array): Promise<string>
   /** Start a retained writer and return JSON {handle, root}; full state is exported separately. */
   createAuthentication(backend: MaltBackend, stateJSON: Uint8Array): Promise<string>
+  /** Consumes a candidate buffer when it occupies its complete ArrayBuffer. */
   importAuthentication(backend: MaltBackend, candidateJSON: Uint8Array): Promise<string>
   /** Handle arguments are UTF-8 bytes of the opaque handle returned by this router. */
   applyAuthentication(backend: MaltBackend, handle: Uint8Array, deltaJSON: Uint8Array): Promise<string>
   exportAuthentication(backend: MaltBackend, handle: Uint8Array): Promise<string>
   discardAuthentication(backend: MaltBackend, handle: Uint8Array): Promise<string>
   closeAuthentication(backend: MaltBackend): Promise<string>
-  compute(backend: MaltBackend, transactionID: Uint8Array, updateViewJSON: Uint8Array, semanticIntentJSON: Uint8Array): Promise<string>
-  bootstrap(backend: MaltBackend): Promise<string>
-  load(backend: MaltBackend, updateViewJSON: Uint8Array): Promise<string>
-  snapshot(backend: MaltBackend, checkpointKey: Uint8Array): Promise<string>
-  restore(backend: MaltBackend, snapshotJSON: Uint8Array, checkpointKey: Uint8Array): Promise<string>
-  prepare(backend: MaltBackend, transactionID: Uint8Array, semanticIntentJSON: Uint8Array): Promise<string>
-  getPreparedResult(backend: MaltBackend, transactionID: Uint8Array): Promise<string>
-  validateReceipt(backend: MaltBackend, writerResultJSON: Uint8Array, materializationReceiptJSON: Uint8Array): Promise<string>
-  acceptReceipt(backend: MaltBackend, transactionID: Uint8Array, materializationReceiptJSON: Uint8Array): Promise<string>
-  discard(backend: MaltBackend, transactionID: Uint8Array): Promise<string>
-  closeSession(backend: MaltBackend): Promise<void>
   terminateBackend(backend: MaltBackend): void
-  terminateAll(): void
   terminate(): void
 }
 

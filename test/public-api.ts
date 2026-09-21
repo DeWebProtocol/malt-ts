@@ -4,7 +4,7 @@ import {
   loadBrowserVerifier,
   maltCoreRelease,
   releaseBrowserVerifier,
-  verifyResolveLocally,
+  verifyAuthenticationLocally,
   type MaltBackend
 } from '@dewebprotocol/malt'
 import { maltWasmAssetsDirectory, versionedWasmAssetsPlugin } from '@dewebprotocol/malt/vite'
@@ -16,7 +16,7 @@ void maltWasmAssetsDirectory()
 void versionedWasmAssetsPlugin()
 const lease = createBrowserVerifierLease()
 void loadBrowserVerifier({ lease }).then(() => releaseBrowserVerifier(lease))
-void verifyResolveLocally({ request: {}, result: {} })
+void verifyAuthenticationLocally({ request: { profile: 'malt.authentication/1', root: 'root', operation: 'resolve', steps: [] }, result: {} })
 void createBrowserMaltWriter({ ipaPreference: 'auto' })
 
 void createBrowserMaltWriter({}).then(async writer => {
@@ -28,5 +28,11 @@ void createBrowserMaltWriter({}).then(async writer => {
   const exported: string = await writer.exportAuthentication('kzg', handle)
   void [created, imported, changed, exported]
   await writer.discardAuthentication('kzg', handle)
+  await writer.validateAuthenticationBatch('kzg', encoded)
+  await writer.validateAuthenticationReceipt('kzg', encoded, encoded)
   await writer.closeAuthentication('kzg')
 })
+
+// @ts-expect-error retired query profiles are not accepted by the public verifier
+const retiredQuery: import("../types/verifier").AuthenticationRequest = { profile: "malt.authentication/0", root: "root", operation: "resolve", steps: [] }
+void retiredQuery

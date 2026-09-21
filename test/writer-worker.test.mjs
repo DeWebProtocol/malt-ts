@@ -3,7 +3,7 @@ import { once } from 'node:events'
 import { Worker } from 'node:worker_threads'
 import { expect, it } from 'vitest'
 
-it.each([undefined, 'maltPrepareAuthentication', 'maltUpdateAuthentication', 'maltApplyAuthentication'])(
+it.each([undefined, 'maltValidateAuthenticationBatch', 'maltValidateAuthenticationReceipt', 'maltPrepareAuthentication', 'maltUpdateAuthentication', 'maltApplyAuthentication'])(
   'requires the complete current writer ABI before ready (missing: %s)', async missingExport => {
     const worker = new Worker(new URL('./fixtures/writer-worker-harness.mjs', import.meta.url), {
       workerData: { missingExport }

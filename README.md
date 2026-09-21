@@ -1,7 +1,7 @@
 # MALT TypeScript SDK
 
 `@dewebprotocol/malt` is the supported TypeScript/JavaScript boundary for
-running the MALT verifier and client-root writer in browsers. It packages a
+running the MALT authentication verifier and writer in browsers. It packages a
 stable API, type declarations, Worker lifecycle management, reproducible WASM
 assets, and Vite integration.
 
@@ -11,9 +11,9 @@ writer semantics independently in TypeScript.
 
 ## Version and Core release
 
-The package asset binding is `0.0.2-rc.3`, built against the published
-`malt-core v0.0.9-rc.3` release at commit
-`a4526f8751db403eaa2e1a7ac6add00b70ff2933`.
+The package asset binding is `0.0.2-rc.4`, built against the published
+`malt-core v0.0.9-rc.4` release at commit
+`ab9114162d654caa713fedbe77b217010a26b7bb`.
 [`malt-core.lock.json`](./malt-core.lock.json) binds that tag, commit, Go module
 checksums, formal Core WASM release manifest, and Core asset-set digests.
 
@@ -30,7 +30,7 @@ import {
   createBrowserVerifierLease,
   loadBrowserVerifier,
   releaseBrowserVerifier,
-  verifyResolveLocally
+  verifyAuthenticationLocally
 } from '@dewebprotocol/malt'
 
 const lease = createBrowserVerifierLease()
@@ -40,7 +40,7 @@ const verifier = await loadBrowserVerifier({
   wasmURL: '/verifier/<asset-set>/malt-verifier.wasm'
 })
 
-const checked = await verifyResolveLocally({ request, result, provider: verifier })
+const checked = await verifyAuthenticationLocally({ request, result, provider: verifier })
 if (!checked.valid) throw new Error(checked.error || 'MALT verification failed')
 releaseBrowserVerifier(lease)
 
@@ -95,54 +95,30 @@ Publishing an npm version, Git tag, or GitHub Release is intentionally separate
 from committing source.
 
 
-## Experimental typed authentication bridge
+## Authentication API
 
-`verifyAuthenticationLocally({request, result, ...options})` forwards the
-`malt.authentication/0` contract to Core/WASM. Typed inputs preserve opaque
-base64 bytes and decimal uint64 strings; this package performs no AA hashing
-or application path normalization. An unavailable ABI fails closed.
+`verifyAuthenticationLocally({request, result, ...options})` verifies the
+caller-selected Root, typed steps and binding/range operation through Core.
+`malt.authentication/1` also authenticates early path absence. Typed inputs
+preserve base64 bytes and decimal uint64 strings; JavaScript performs no
+input hashing or application path normalization.
 
-The distributed verifier and writer assets are rebuilt from this package's ABI
-wrappers against the exact published Core `v0.0.9-rc.3` release. The verifier
-executes typed authentication through `maltVerifyAuthentication`; the internal
-writer ABI also supports `maltPrepareAuthentication`. Release provenance binds
-both exports. These assets use Core's client-root v4, Resolve/Read v3, Map-proof v2, and
-authentication/0 corpora; historical corpus bytes remain in Core Git history.
+`prepareAuthentication(backend, stateJSON)` builds a complete candidate.
+`updateAuthentication(backend, candidateJSON, stateJSON)` verifies a complete
+base and applies the current Core writer. Inputs are UTF-8 JSON `Uint8Array`s;
+returned JSON follows Core's authentication candidate schema.
 
-`make audit-core-release` verifies the canonical tag and published release
-manifest, and `make test-wasm` validates both semantic and typed contracts. The
-package version `0.0.2-rc.3` is independent of the locked Core version.
-Root V stays zero throughout that process; a package release does not declare
-production readiness. Core's Root/input specification remains normative.
+### Retained writers
 
-### Typed ArcSet writer candidates
+`createAuthentication` and `importAuthentication` return JSON `{handle, root}`.
+Handles are opaque identities bound to this router, backend and Worker.
+`importAuthentication` transfers a candidate's complete ArrayBuffer when
+possible; pass a copy if the caller needs those bytes afterwards.
 
-`writer.prepareAuthentication(backend, stateJSON)` creates a complete typed
-candidate. `writer.updateAuthentication(backend, candidateJSON, stateJSON)`
-verifies the base and applies the Core typed writer. Inputs are UTF-8 JSON
-`Uint8Array`s; returned JSON follows Core's authentication candidate schema.
-Candidates neither publish nor accept Roots. The request-selected
-`malt.authentication/1` verifier profile also supports proven early path absence.
-
-The distributed assets include these writer APIs and bind the exact published
-Core release in `malt-core.lock.json`. Development builds must preserve this
-release provenance; temporary builds are not substitutes for the distribution.
-
-### Retained authentication sessions
-
-The API provides `createAuthentication`, `importAuthentication`,
-`applyAuthentication`, `exportAuthentication`, `discardAuthentication` and
-`closeAuthentication`. The first two retain a Core-owned writer and return
-JSON `{handle, root}` with an opaque handle bound to this router and Worker.
-Apply takes handle bytes plus a
-`malt.authentication-delta/0` JSON delta and returns a new independent handle.
-Export explicitly returns a complete candidate; updates do not resend or
-export the base state. Handles are scoped to the selected backend Worker and
-are rejected after discard, close, or Worker termination. Pending requests
-are cancelled on termination or fatal runtime loss. A retained session
-pins its backend until `closeAuthentication`; closing the client-root session
-does not release that pin. Initial creation and close/create operations are
-serialized so concurrent backend requests cannot discard retained state.
+`applyAuthentication` takes a handle and a `malt.authentication-delta/0`
+change set. It returns a new independent handle and leaves its base usable.
+`exportAuthentication` explicitly exports a complete candidate. Retained
+updates do not resend or export the complete base.
 
 ```ts
 const encode = (value: unknown) => new TextEncoder().encode(JSON.stringify(value))
@@ -157,40 +133,45 @@ await writer.discardAuthentication('kzg', handleBytes(base.handle))
 await writer.closeAuthentication('kzg')
 ```
 
-Core owns the input interpretation, authentication tree, immutable state,
-limits and checkpoint coordination. This package owns the Worker lifecycle,
-backend routing and browser ABI. Worker readiness now requires every current
-export; an incomplete runtime fails during initialization.
+Discard, close and Worker termination invalidate the associated handles.
+Pending operations reserve their backend, and retained state prevents backend
+switches until explicitly closed. Fatal runtime loss retires the Worker and
+cancels pending operations; a subsequent request creates a new generation.
 
-These APIs and the distributed assets are bound to published Core `v0.0.9-rc.3`
-through the reviewed lock. Formal release auditing, complete ABI checks, and
-verifier/writer conformance validate the exact Core and package asset sets.
+### Materialization batches and receipts
 
-To validate both source checkouts without changing the release binding, run
-under the workspace CPU scope:
+`validateAuthenticationBatch(backend, batchJSON)` verifies all candidates and
+returns Core's digest of the exact `malt.authentication-batch/0` batch.
+Candidates appear before parents and lineage successors. A bootstrap batch
+includes its newly constructed base.
+
+`validateAuthenticationReceipt(backend, batchJSON, receiptJSON)` checks the
+`malt.authentication-receipt/0` transaction ID, base, final Root, digest and
+durable boundary. It returns the final Root without modifying retained state.
+Receipts acknowledge persistence; they neither prove a portable state
+transition nor publish a head or grant client trust. Applications own durable
+journals, snapshots, transport and publication.
+
+### Source integration and release adoption
+
+The current source removes Map/List, Resolve/Read, client-root, update-view and
+session snapshot compatibility APIs. Worker readiness requires the complete
+current ABI. There are no forwarding aliases or optional old-runtime exports.
+
+The `malt-core.lock.json` and packaged binary assets identify the published
+Core `v0.0.9-rc.4` release. Its current host and batch APIs are bound to the
+exact release tag, source commit, module checksums, and formal WASM manifest.
+Source integration checks remain separate from this published release binding.
+
+Validate both source checkouts under the workspace CPU scope:
 
 ```bash
 ./scripts/test-core-source.sh /absolute/path/to/core-checkout /tmp/malt-ts-source-wasm
 ```
 
-The script requires a new empty output directory, uses a temporary Go
-workspace and places diagnostic builds outside
-`assets/`. It runs native tests, frozen Core conformance, retained-writer and
-checkpoint tests, and a real Worker smoke test. Its output is not a package
-release or evidence of published provenance.
-
-### Transaction identity
-
-Writer methods take `transactionID` bytes. The current Core contract uses
-`TransactionID` in Go and `transaction_id` in bundle/receipt JSON, with bundle
-and receipt profiles `/v2` and writer result profile `/v3`. Old operation-ID
-fields and result profiles are rejected rather than translated. Candidate
-computation and receipt acceptance do not publish an application head or grant
-client trust. Conformance and distributed assets use the v3 client-root corpus, with an exact
-published Core lock and matching checksums.
-
-The pre-beta verifier API uses operation-specific `resolve`, `read`,
-`mapProof`, and `authentication` methods. The historical `artifact` method and
-`maltVerifyArtifact` internal export have been removed. This source cleanup
-preserves the exact published Core binding in `malt-core.lock.json`; adopting
-a newer Core release remains a separate lock-file update and conformance check.
+The output directory must be new and empty. The script creates a temporary
+Go workspace, builds outside `assets/`, checks backend isolation, runs typed
+Core conformance and retained-writer/batch tests for all committer profiles,
+and exercises the real browser router against a Worker. These are development
+artifacts, separate from a package release. `make test-wasm` applies the same
+current contracts to the exact release selected by the lock.

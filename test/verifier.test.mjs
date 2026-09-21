@@ -3,24 +3,19 @@ import * as Digest from 'multiformats/hashes/digest'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 function typedRoot(codec, size) {
-  return CID.createV1(codec, Digest.create(0, new Uint8Array(size))).toString()
+  return CID.createV1(codec, Digest.create(0, Uint8Array.from([size === 48 ? 1 : 2, size, ...new Uint8Array(size)]))).toString()
 }
 
 function verification(from) {
   return JSON.stringify({
     request: {
-      profile: 'malt.resolve/v0alpha1',
+      profile: 'malt.authentication/1',
       root: from,
-      segments: ['docs']
+      operation: 'resolve', steps: [{ kind: 'label', data: 'ZG9jcw==' }]
     },
     result: {
-      profile: 'malt.resolve/v0alpha1',
-      target: from,
-      prooflist: {
-        root: from,
-        query: 'docs',
-        steps: [{ kind: 'map_lookup', from, target: from }]
-      }
+      profile: 'malt.authentication/1',
+      resolved: from, traversal: { results: [] }
     }
   })
 }
@@ -76,12 +71,7 @@ class FakeVerifierWorker {
         }))
         return
       }
-      const profile =
-        message.kind === "read"
-          ? "malt.read/v0alpha1"
-          : message.kind === "mapProof"
-            ? "malt.map-proof/v0alpha1"
-            : "malt.resolve/v0alpha1"
+      const profile = JSON.parse(message.json).request.profile
       queueMicrotask(() => this.emit({
         type: 'result',
         id: message.id,
@@ -176,44 +166,28 @@ describe('browser verifier workers', () => {
 
   it('routes KZG, IPA, and mixed typed proofs through that one worker', async () => {
     vi.stubGlobal('Worker', FakeVerifierWorker)
-    const { loadBrowserVerifier, verifyResolveLocally } =
+    const { loadBrowserVerifier, verifyAuthenticationLocally } =
       await import('../src/verifier.mjs')
     const provider = await loadBrowserVerifier({
       runtimeURL: '/verifier/runtime-workers-b.js',
       wasmURL: '/verifier/verifier-workers-b.wasm'
     })
     const [portableWorker] = FakeVerifierWorker.instances
-    const kzgRoot = typedRoot(0x303101, 48)
-    const kzgResult = await verifyResolveLocally({
+    const kzgRoot = typedRoot(0x300101, 48)
+    const kzgResult = await verifyAuthenticationLocally({
       ...JSON.parse(verification(kzgRoot)),
       provider
     })
     expect(kzgResult.valid).toBe(true)
 
-    const ipaRoot = typedRoot(0x303102, 32)
-    const mixed = JSON.stringify({
-      request: {
-        profile: 'malt.resolve/v0alpha1',
-        root: kzgRoot,
-        segments: ['child']
-      },
-      result: {
-        profile: 'malt.resolve/v0alpha1',
-        target: ipaRoot,
-        prooflist: {
-          root: kzgRoot,
-          query: 'child',
-          steps: [
-            { kind: 'map_lookup', from: kzgRoot, target: ipaRoot },
-            { kind: 'map_lookup', from: ipaRoot, target: ipaRoot }
-          ]
-        }
-      }
-    })
+    const ipaRoot = typedRoot(0x300101, 32)
+    const mixedInput = JSON.parse(verification(kzgRoot))
+    mixedInput.result.resolved = ipaRoot
+    const mixed = JSON.stringify(mixedInput)
 
-    await expect(provider.resolve(verification(ipaRoot))).resolves.toContain('"valid":true')
-    await expect(provider.resolve(mixed)).resolves.toContain('"valid":true')
-    await expect(provider.read(verification(kzgRoot))).resolves.toContain('"valid":true')
+    await expect(provider.authentication(verification(ipaRoot))).resolves.toContain('"valid":true')
+    await expect(provider.authentication(mixed)).resolves.toContain('"valid":true')
+    await expect(provider.authentication(verification(kzgRoot))).resolves.toContain('"valid":true')
     expect(provider.artifact).toBeUndefined()
 
     expect(FakeVerifierWorker.instances).toHaveLength(1)
@@ -321,63 +295,35 @@ describe('browser verifier workers', () => {
 
     releaseBrowserVerifier(secondOldLease)
     expect(replacementWorkers.every((worker) => !worker.terminated)).toBe(true)
-    await expect(replacement.resolve(verification(typedRoot(0x303101, 48))))
+    await expect(replacement.authentication(verification(typedRoot(0x300101, 48))))
       .resolves.toContain('"valid":true')
 
     releaseBrowserVerifier(replacementLease)
     expect(replacementWorkers.every((worker) => worker.terminated)).toBe(true)
   })
 
-  it("binds an absent MapProof to the client-selected root and key", async () => {
-    const { verifyMapProofLocally } = await import("../src/verifier.mjs")
-    const root = typedRoot(0x303101, 48)
-    let received
-    const provider = {
-      mapProof: vi.fn((raw) => {
-        received = JSON.parse(raw)
-        return JSON.stringify({ profile: "malt.map-proof/v0alpha1", valid: true })
-      })
-    }
-    const request = {
-      profile: "malt.map-proof/v0alpha1",
-      root,
-      key: ["missing"]
-    }
-    const result = {
-      profile: "malt.map-proof/v0alpha1",
-      present: false,
-      prooflist: {
-        root,
-        query: "missing",
-        steps: [{ kind: "map_absence", from: root, query: "missing" }]
-      }
-    }
-
-    await expect(verifyMapProofLocally({ request, result, provider })).resolves.toMatchObject({
-      valid: true,
-      source: "local-wasm"
-    })
-    expect(received.result.present).toBe(false)
-    expect(received.result.target).toBeUndefined()
-    expect(received.result.prooflist.root).toEqual({ "/": root })
-    await expect(verifyMapProofLocally({
-      request: { ...request, key: ["other"] },
-      result,
-      provider
-    })).rejects.toThrow("does not match the client-selected key")
-    expect(provider.mapProof).toHaveBeenCalledTimes(1)
-  })
+  it('passes an absent typed binding and the unchanged selected input to Core', async () => {
+  const { verifyAuthenticationLocally } = await import('../src/verifier.mjs')
+  const q = { profile: 'malt.authentication/1', root: typedRoot(0x300101, 48), steps: [], operation: 'binding', input: { kind: 'label', data: 'bWlzc2luZw==' } }
+  const result = { profile: q.profile, resolved: q.root, binding: { present: false }, traversal: { results: [] } }
+  const provider = { authentication: vi.fn(async (json) => {
+    expect(JSON.parse(json)).toEqual({ request: q, result })
+    return JSON.stringify({ profile: q.profile, valid: true })
+  }) }
+  expect((await verifyAuthenticationLocally({ request: q, result, provider })).valid).toBe(true)
+  expect(provider.authentication).toHaveBeenCalledOnce()
+})
 
   it('keeps function providers receiver-free', async () => {
-    const { verifyResolveLocally } = await import('../src/verifier.mjs')
-    const root = typedRoot(0x303101, 48)
+    const { verifyAuthenticationLocally } = await import('../src/verifier.mjs')
+    const root = typedRoot(0x300101, 48)
     let receiver = 'not-called'
     function provider() {
       receiver = this
-      return JSON.stringify({ profile: 'malt.resolve/v0alpha1', valid: true })
+      return JSON.stringify({ profile: 'malt.authentication/1', valid: true })
     }
 
-    const result = await verifyResolveLocally({
+    const result = await verifyAuthenticationLocally({
       ...JSON.parse(verification(root)),
       provider
     })
@@ -386,28 +332,11 @@ describe('browser verifier workers', () => {
     expect(receiver).toBeUndefined()
   })
 
-  it('canonicalizes ProofList CID strings for the Go verifier wire format', async () => {
-    const { verifyResolveLocally } = await import('../src/verifier.mjs')
-    const root = typedRoot(0x303101, 48)
-    let received
-    const provider = (raw) => {
-      received = JSON.parse(raw)
-      return JSON.stringify({ profile: 'malt.resolve/v0alpha1', valid: true })
-    }
-
-    const result = await verifyResolveLocally({
-      ...JSON.parse(verification(root)),
-      provider
-    })
-
-    expect(result.valid).toBe(true)
-    expect(received.result.target).toBe(root)
-    expect(received.result.prooflist.root).toEqual({ '/': root })
-    expect(received.result.prooflist.steps[0]).toMatchObject({
-      from: { '/': root },
-      target: { '/': root }
-    })
-  })
+  it('exports only the current authentication verifier entry point', async () => {
+  const sdk = await import('../src/index.mjs')
+  for (const name of ['verifyResolveLocally', 'verifyReadLocally', 'verifyMapProofLocally', 'verifyContentProofLocally', 'resolveVerificationFromProofList']) expect(sdk[name]).toBeUndefined()
+  expect(sdk.verifyAuthenticationLocally).toBeTypeOf('function')
+})
 
   it('shares one replacement when the first portable worker fails before ready', async () => {
     vi.stubGlobal('Worker', FakeVerifierWorker)
@@ -481,13 +410,13 @@ describe('browser verifier workers', () => {
 
     firstPortable.emit({ type: 'runtime-error', error: 'simulated runtime failure' })
     expect(firstPortable.terminated).toBe(true)
-    const kzgRoot = typedRoot(0x303101, 48)
-    await expect(provider.resolve(verification(kzgRoot)))
+    const kzgRoot = typedRoot(0x300101, 48)
+    await expect(provider.authentication(verification(kzgRoot)))
       .resolves.toContain('"valid":true')
     expect(FakeVerifierWorker.instances[1].backend).toBe('all')
 
-    const ipaRoot = typedRoot(0x303102, 32)
-    await expect(provider.resolve(verification(ipaRoot)))
+    const ipaRoot = typedRoot(0x300101, 32)
+    await expect(provider.authentication(verification(ipaRoot)))
       .resolves.toContain('"valid":true')
     expect(FakeVerifierWorker.instances).toHaveLength(2)
     await vi.waitFor(() => expect(beforeWorkerStart.mock.calls.length).toBeGreaterThanOrEqual(3))
@@ -501,15 +430,15 @@ describe('browser verifier workers', () => {
       wasmURL: '/verifier/verifier-call-errors.wasm'
     })
 
-    await expect(provider.resolve('simulate-result-error'))
+    await expect(provider.authentication('simulate-result-error'))
       .rejects.toThrow('simulated verification result error')
     const controller = new AbortController()
     controller.abort()
-    await expect(provider.resolve(verification(typedRoot(0x303101, 48)), controller.signal))
+    await expect(provider.authentication(verification(typedRoot(0x300101, 48)), controller.signal))
       .rejects.toMatchObject({ name: 'AbortError' })
 
     await vi.waitFor(() => expect(FakeVerifierWorker.instances).toHaveLength(1))
-    await expect(provider.resolve(verification(typedRoot(0x303102, 32))))
+    await expect(provider.authentication(verification(typedRoot(0x300101, 32))))
       .resolves.toContain('"valid":true')
     expect(FakeVerifierWorker.instances).toHaveLength(1)
   })
@@ -528,11 +457,11 @@ describe('browser verifier workers', () => {
     expect(FakeVerifierWorker.instances.every((worker) => worker.terminated)).toBe(true)
 
     const provider = await loadBrowserVerifier(options)
-    const kzgRoot = typedRoot(0x303101, 48)
-    await expect(provider.resolve(verification(kzgRoot)))
+    const kzgRoot = typedRoot(0x300101, 48)
+    await expect(provider.authentication(verification(kzgRoot)))
       .resolves.toContain('"valid":true')
-    const ipaRoot = typedRoot(0x303102, 32)
-    await expect(provider.resolve(verification(ipaRoot)))
+    const ipaRoot = typedRoot(0x300101, 32)
+    await expect(provider.authentication(verification(ipaRoot)))
       .resolves.toContain('"valid":true')
     expect(FakeVerifierWorker.instances).toHaveLength(3)
     expect(FakeVerifierWorker.instances[2].backend).toBe('all')
@@ -558,7 +487,7 @@ describe('browser verifier workers', () => {
       error: 'simulated runtime failure'
     })
     await vi.waitFor(() => expect(beforeWorkerStart).toHaveBeenCalledTimes(2))
-    await expect(provider.resolve(verification(typedRoot(0x303101, 48))))
+    await expect(provider.authentication(verification(typedRoot(0x300101, 48))))
       .rejects.toBe(releaseChanged)
     await Promise.resolve()
 

@@ -76,6 +76,8 @@ function fallbackProfiles(selected) {
 function validateRuntime(runtime) {
   if (
     !runtime ||
+    typeof runtime.validateAuthenticationBatch !== 'function' ||
+    typeof runtime.validateAuthenticationReceipt !== 'function' ||
     typeof runtime.prepareAuthentication !== 'function' ||
     typeof runtime.updateAuthentication !== 'function' ||
     typeof runtime.createAuthentication !== 'function' ||
@@ -84,17 +86,6 @@ function validateRuntime(runtime) {
     typeof runtime.exportAuthentication !== 'function' ||
     typeof runtime.discardAuthentication !== 'function' ||
     typeof runtime.closeAuthentication !== 'function' ||
-    typeof runtime.compute !== 'function' ||
-    typeof runtime.load !== 'function' ||
-    typeof runtime.snapshot !== 'function' ||
-    typeof runtime.restore !== 'function' ||
-    typeof runtime.bootstrap !== 'function' ||
-    typeof runtime.prepare !== 'function' ||
-    typeof runtime.getPreparedResult !== 'function' ||
-    typeof runtime.validateReceipt !== 'function' ||
-    typeof runtime.acceptReceipt !== 'function' ||
-    typeof runtime.discard !== 'function' ||
-    typeof runtime.closeSession !== 'function' ||
     typeof runtime.status !== 'function' ||
     typeof runtime.fatal?.then !== 'function' ||
     typeof runtime.terminate !== 'function'
@@ -114,7 +105,6 @@ export class BrowserMaltWriterRouter {
   #onStatus
   #active = null
   #loading = null
-  #sessionBackend = ''
   #authenticationBackend = ''
   #authenticationRetained = false
   #authenticationPending = 0
@@ -161,7 +151,6 @@ export class BrowserMaltWriterRouter {
       ? error
       : new Error(String(error || `${active.backend} writer runtime failed`))
     this.#active = null
-    if (this.#sessionBackend === active.backend) this.#sessionBackend = ''
     this.#resetAuthentication(active.backend)
     try {
       active.runtime.terminate()
@@ -229,9 +218,6 @@ export class BrowserMaltWriterRouter {
       const active = this.#active
       const retired = this.#retireFatalActive(active)
       if (!retired && active.backend === backend) return active.runtime
-    }
-    if (this.#sessionBackend && this.#sessionBackend !== backend) {
-      throw new Error(`cannot switch from ${this.#sessionBackend} while its writer session is active`)
     }
     if (this.#authenticationBackend && this.#authenticationBackend !== backend) {
       throw new Error(`cannot switch from ${this.#authenticationBackend} while its authentication session is active`)
@@ -375,6 +361,12 @@ export class BrowserMaltWriterRouter {
     }
   }
 
+  validateAuthenticationBatch(backend, batchJSON) {
+    return this.#call(backend, 'validateAuthenticationBatch', [batchJSON])
+  }
+  validateAuthenticationReceipt(backend, batchJSON, receiptJSON) {
+    return this.#call(backend, 'validateAuthenticationReceipt', [batchJSON, receiptJSON])
+  }
   prepareAuthentication(backend, stateJSON) {
     return this.#call(backend, 'prepareAuthentication', [stateJSON])
   }
@@ -391,6 +383,7 @@ export class BrowserMaltWriterRouter {
 
   async #callAuthentication(backend, method, args, creates = false, closes = false) {
     const selected = requireBackend(backend)
+    if (this.#active) this.#retireFatalActive(this.#active)
     if (this.#authenticationBackend && this.#authenticationBackend !== selected) {
       throw new Error(`cannot switch from ${this.#authenticationBackend} while its authentication session is active`)
     }
@@ -472,54 +465,6 @@ export class BrowserMaltWriterRouter {
   closeAuthentication(backend) {
     return this.#callAuthentication(backend, 'closeAuthentication', [], false, true)
   }
-  compute(backend, transactionID, updateViewJSON, semanticIntentJSON) {
-    return this.#call(backend, 'compute', [transactionID, updateViewJSON, semanticIntentJSON])
-  }
-  async bootstrap(backend) {
-    const result = await this.#call(backend, 'bootstrap', [])
-    this.#sessionBackend = backend
-    return result
-  }
-  async load(backend, updateViewJSON) {
-    const result = await this.#call(backend, 'load', [updateViewJSON])
-    this.#sessionBackend = backend
-    return result
-  }
-  snapshot(backend, checkpointKey) {
-    return this.#call(backend, 'snapshot', [checkpointKey])
-  }
-  async restore(backend, snapshotJSON, checkpointKey) {
-    const result = await this.#call(backend, 'restore', [snapshotJSON, checkpointKey])
-    this.#sessionBackend = backend
-    return result
-  }
-  prepare(backend, transactionID, semanticIntentJSON) {
-    return this.#call(backend, 'prepare', [transactionID, semanticIntentJSON])
-  }
-  getPreparedResult(backend, transactionID) {
-    return this.#call(backend, 'getPreparedResult', [transactionID])
-  }
-  validateReceipt(backend, writerResultJSON, materializationReceiptJSON) {
-    return this.#call(backend, 'validateReceipt', [writerResultJSON, materializationReceiptJSON])
-  }
-  acceptReceipt(backend, transactionID, materializationReceiptJSON) {
-    return this.#call(backend, 'acceptReceipt', [transactionID, materializationReceiptJSON])
-  }
-  discard(backend, transactionID) { return this.#call(backend, 'discard', [transactionID]) }
-  async closeSession(backend) {
-    const selected = requireBackend(backend)
-    const active = this.#active?.backend === selected ? this.#active : null
-    try {
-      if (active) await active.runtime.closeSession(selected)
-    } catch (error) {
-      if (active && this.#active?.runtime === active.runtime) {
-        this.#retireFatalActive(active, error)
-      }
-      throw error
-    } finally {
-      if (this.#sessionBackend === selected) this.#sessionBackend = ''
-    }
-  }
 
   terminateBackend(backend) {
     const selected = requireBackend(backend)
@@ -532,12 +477,9 @@ export class BrowserMaltWriterRouter {
       this.#active.runtime.terminate()
       this.#active = null
     }
-    if (this.#sessionBackend === selected) this.#sessionBackend = ''
     this.#resetAuthentication(selected)
     this.#setStatus(selected, 'idle')
   }
-
-  terminateAll() { this.terminate() }
 
   terminate() {
     if (this.#terminated) return
@@ -547,7 +489,6 @@ export class BrowserMaltWriterRouter {
     if (this.#loading) this.#loading.runtime = null
     this.#active?.runtime.terminate()
     this.#active = null
-    this.#sessionBackend = ''
     this.#resetAuthentication(this.#authenticationBackend)
     this.#setStatus('kzg', 'terminated')
     this.#setStatus('ipa', 'terminated')

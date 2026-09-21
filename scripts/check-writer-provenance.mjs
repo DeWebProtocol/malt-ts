@@ -40,23 +40,14 @@ const expectedCodegenEnvironment = Object.freeze({
 const expectedExports = Object.freeze([
   'maltApplyAuthentication',
   'maltCloseAuthentication',
-  'maltComputeClientRootV1',
   'maltCreateAuthentication',
   'maltDiscardAuthentication',
   'maltExportAuthentication',
   'maltImportAuthentication',
   'maltPrepareAuthentication',
   'maltUpdateAuthentication',
-  'maltWriterAcceptSessionReceiptV1',
-  'maltWriterBootstrapSessionV1',
-  'maltWriterCloseSessionV1',
-  'maltWriterDiscardSessionCandidateV1',
-  'maltWriterGetPreparedResultV1',
-  'maltWriterLoadSessionV1',
-  'maltWriterPrepareSessionV1',
-  'maltWriterRestoreSessionV1',
-  'maltWriterSnapshotSessionV1',
-  'maltWriterValidateReceiptV1'
+  'maltValidateAuthenticationBatch',
+  'maltValidateAuthenticationReceipt'
 ])
 
 const goVersionPattern = /^go[1-9][0-9]*\.[0-9]+(?:\.[0-9]+|(?:beta|rc)[1-9][0-9]*)?$/
