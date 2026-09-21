@@ -35,7 +35,9 @@ for command_name in go node; do
 done
 
 lock_fields="$(
-	GOENV=off GOWORK=off GOFLAGS= GOTOOLCHAIN=auto \
+	env -u GOROOT -u GOOS -u GOARCH GO111MODULE=on \
+		GOENV=off GOWORK=off GOFLAGS= GOTOOLCHAIN=auto \
+		GOEXPERIMENT=none GOWASM= GOFIPS140=off CGO_ENABLED=0 \
 		go mod edit -json "${repo_root}/go.mod" |
 	REPO_ROOT="${repo_root}" node -e '
 		let input = ""
@@ -105,12 +107,16 @@ IFS=$'\t' read -r malt_version locked_commit locked_module_sum locked_go_mod_sum
 	<<<"${lock_fields}"
 
 download_json="$(
-	GOENV=off GOWORK=off GOFLAGS= GOTOOLCHAIN=auto \
+	env -u GOROOT -u GOOS -u GOARCH GO111MODULE=on \
+		GOENV=off GOWORK=off GOFLAGS= GOTOOLCHAIN=auto \
+		GOEXPERIMENT=none GOWASM= GOFIPS140=off CGO_ENABLED=0 \
 		go mod download -json "${module_path}@${malt_version}"
 )"
 (
 	cd "${repo_root}"
-	GOENV=off GOWORK=off GOFLAGS= GOTOOLCHAIN=auto go mod verify >/dev/null
+	env -u GOROOT -u GOOS -u GOARCH GO111MODULE=on \
+		GOENV=off GOWORK=off GOFLAGS= GOTOOLCHAIN=auto \
+		GOEXPERIMENT=none GOWASM= GOFIPS140=off CGO_ENABLED=0 go mod verify >/dev/null
 )
 validator=(
 	env
