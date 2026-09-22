@@ -1,8 +1,8 @@
-export declare const maltTSVersion: '0.0.2-rc.5'
+export declare const maltTSVersion: '0.0.2-rc.6'
 
 export interface MaltCoreRelease {
-  readonly version: 'v0.0.9-rc.6'
-  readonly commit: '9f1794e15df0414c95c217b3526d6b57631c1193'
+  readonly version: 'v0.0.9-rc.7'
+  readonly commit: 'afd54714ce0a019bf35c5c158ba09b48855db621'
   readonly moduleSum: string
   readonly goModSum: string
 }
