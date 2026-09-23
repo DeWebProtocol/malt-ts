@@ -1,9 +1,9 @@
 {
   "schema": "malt.ts-core-lock/v2",
   "module_path": "github.com/dewebprotocol/malt-core",
-  "module_version": "v0.0.9-rc.7",
+  "module_version": "v0.0.9",
   "source_repository": "https://github.com/DeWebProtocol/malt-core.git",
-  "source_commit": "afd54714ce0a019bf35c5c158ba09b48855db621",
-  "module_sum": "h1:PrnWA1chM3E9MrJ2OWVm4BfAayoff0iibNPZpcuN31Y=",
+  "source_commit": "e389418cf6715ae58a97255196833b410b0962d1",
+  "module_sum": "h1:e4jNMhZ0dkaiFFLfg/8xxUFAP7JK//8KLxqp78s2nso=",
   "go_mod_sum": "h1:o6L8K9vJp5hyrVo3fUtSsj0rvNpcboOcOb3nQwnR/gs="
 }
