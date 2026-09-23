@@ -23,7 +23,7 @@ func registerAuthenticationVerifier(backend string) error {
 	default:
 		return fmt.Errorf("unsupported verifier backend %q", backend)
 	}
-	verifier, initErr := authbuiltin.NewVerifier(nil, profiles...)
+	verifier, initErr := authbuiltin.NewVerifier(profiles...)
 	if initErr != nil {
 		return initErr
 	}

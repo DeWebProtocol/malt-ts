@@ -65,7 +65,7 @@ cp "${temporary}/assets/verifier/"* "${verifier_staging}/"
 cp "${temporary}/assets/writer/"* "${writer_staging}/"
 pin="$("${build_source}/scripts/resolve-core.sh")"
 IFS=$'\t' read -r _ _ core_module_dir _ _ <<<"${pin}"
-authentication_corpus_sha256="$(sha256sum "${core_module_dir}/conformance/authentication-v1.json" | awk '{print $1}')"
+authentication_corpus_sha256="$(sha256sum "${core_module_dir}/conformance/authentication-v2.json" | awk '{print $1}')"
 
 chmod 0644 "${verifier_staging}/"* "${writer_staging}/"*
 (
@@ -136,7 +136,7 @@ MANIFEST_PATH="${temporary}/WASM-RELEASE.json" node -e '
 		target: "js/wasm",
 		archive_format: "ustar+gzip",
 		conformance_corpora: {
-			authentication: {schema: "malt.conformance.authentication/1", sha256: process.env.AUTHENTICATION_CORPUS_SHA256},
+			authentication: {schema: "malt.conformance.authentication/2", sha256: process.env.AUTHENTICATION_CORPUS_SHA256},
 		},
 		codegen_environment: {CGO_ENABLED: "0", GOEXPERIMENT: "none", GOWASM: "", GOFIPS140: "off"},
 		components: {verifier: component("VERIFIER"), writer: component("WRITER")}

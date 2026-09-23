@@ -9,12 +9,12 @@ function typedRoot(codec, size) {
 function verification(from) {
   return JSON.stringify({
     request: {
-      profile: 'malt.authentication/1',
+      profile: 'malt.authentication/3',
       root: from,
-      operation: 'resolve', steps: [{ kind: 'label', data: 'ZG9jcw==' }]
+      operation: 'resolve', steps: ['ZG9jcw==']
     },
     result: {
-      profile: 'malt.authentication/1',
+      profile: 'malt.authentication/3',
       resolved: from, traversal: { results: [] }
     }
   })
@@ -173,14 +173,14 @@ describe('browser verifier workers', () => {
       wasmURL: '/verifier/verifier-workers-b.wasm'
     })
     const [portableWorker] = FakeVerifierWorker.instances
-    const kzgRoot = typedRoot(0x300101, 48)
+    const kzgRoot = typedRoot(0x300104, 48)
     const kzgResult = await verifyAuthenticationLocally({
       ...JSON.parse(verification(kzgRoot)),
       provider
     })
     expect(kzgResult.valid).toBe(true)
 
-    const ipaRoot = typedRoot(0x300101, 32)
+    const ipaRoot = typedRoot(0x300104, 32)
     const mixedInput = JSON.parse(verification(kzgRoot))
     mixedInput.result.resolved = ipaRoot
     const mixed = JSON.stringify(mixedInput)
@@ -295,7 +295,7 @@ describe('browser verifier workers', () => {
 
     releaseBrowserVerifier(secondOldLease)
     expect(replacementWorkers.every((worker) => !worker.terminated)).toBe(true)
-    await expect(replacement.authentication(verification(typedRoot(0x300101, 48))))
+    await expect(replacement.authentication(verification(typedRoot(0x300104, 48))))
       .resolves.toContain('"valid":true')
 
     releaseBrowserVerifier(replacementLease)
@@ -304,7 +304,7 @@ describe('browser verifier workers', () => {
 
   it('passes an absent typed binding and the unchanged selected input to Core', async () => {
   const { verifyAuthenticationLocally } = await import('../src/verifier.mjs')
-  const q = { profile: 'malt.authentication/1', root: typedRoot(0x300101, 48), steps: [], operation: 'binding', input: { kind: 'label', data: 'bWlzc2luZw==' } }
+  const q = { profile: 'malt.authentication/3', root: typedRoot(0x300104, 48), steps: [], operation: 'binding', label: 'bWlzc2luZw==' }
   const result = { profile: q.profile, resolved: q.root, binding: { present: false }, traversal: { results: [] } }
   const provider = { authentication: vi.fn(async (json) => {
     expect(JSON.parse(json)).toEqual({ request: q, result })
@@ -316,11 +316,11 @@ describe('browser verifier workers', () => {
 
   it('keeps function providers receiver-free', async () => {
     const { verifyAuthenticationLocally } = await import('../src/verifier.mjs')
-    const root = typedRoot(0x300101, 48)
+    const root = typedRoot(0x300104, 48)
     let receiver = 'not-called'
     function provider() {
       receiver = this
-      return JSON.stringify({ profile: 'malt.authentication/1', valid: true })
+      return JSON.stringify({ profile: 'malt.authentication/3', valid: true })
     }
 
     const result = await verifyAuthenticationLocally({
@@ -410,12 +410,12 @@ describe('browser verifier workers', () => {
 
     firstPortable.emit({ type: 'runtime-error', error: 'simulated runtime failure' })
     expect(firstPortable.terminated).toBe(true)
-    const kzgRoot = typedRoot(0x300101, 48)
+    const kzgRoot = typedRoot(0x300104, 48)
     await expect(provider.authentication(verification(kzgRoot)))
       .resolves.toContain('"valid":true')
     expect(FakeVerifierWorker.instances[1].backend).toBe('all')
 
-    const ipaRoot = typedRoot(0x300101, 32)
+    const ipaRoot = typedRoot(0x300104, 32)
     await expect(provider.authentication(verification(ipaRoot)))
       .resolves.toContain('"valid":true')
     expect(FakeVerifierWorker.instances).toHaveLength(2)
@@ -434,11 +434,11 @@ describe('browser verifier workers', () => {
       .rejects.toThrow('simulated verification result error')
     const controller = new AbortController()
     controller.abort()
-    await expect(provider.authentication(verification(typedRoot(0x300101, 48)), controller.signal))
+    await expect(provider.authentication(verification(typedRoot(0x300104, 48)), controller.signal))
       .rejects.toMatchObject({ name: 'AbortError' })
 
     await vi.waitFor(() => expect(FakeVerifierWorker.instances).toHaveLength(1))
-    await expect(provider.authentication(verification(typedRoot(0x300101, 32))))
+    await expect(provider.authentication(verification(typedRoot(0x300104, 32))))
       .resolves.toContain('"valid":true')
     expect(FakeVerifierWorker.instances).toHaveLength(1)
   })
@@ -457,10 +457,10 @@ describe('browser verifier workers', () => {
     expect(FakeVerifierWorker.instances.every((worker) => worker.terminated)).toBe(true)
 
     const provider = await loadBrowserVerifier(options)
-    const kzgRoot = typedRoot(0x300101, 48)
+    const kzgRoot = typedRoot(0x300104, 48)
     await expect(provider.authentication(verification(kzgRoot)))
       .resolves.toContain('"valid":true')
-    const ipaRoot = typedRoot(0x300101, 32)
+    const ipaRoot = typedRoot(0x300104, 32)
     await expect(provider.authentication(verification(ipaRoot)))
       .resolves.toContain('"valid":true')
     expect(FakeVerifierWorker.instances).toHaveLength(3)
@@ -487,7 +487,7 @@ describe('browser verifier workers', () => {
       error: 'simulated runtime failure'
     })
     await vi.waitFor(() => expect(beforeWorkerStart).toHaveBeenCalledTimes(2))
-    await expect(provider.authentication(verification(typedRoot(0x300101, 48))))
+    await expect(provider.authentication(verification(typedRoot(0x300104, 48))))
       .rejects.toBe(releaseChanged)
     await Promise.resolve()
 

@@ -4,7 +4,8 @@ globalThis.Go = class {
   importObject = {}
   run() {
     globalThis.maltVerifierLoadedBackend = 'all'
-    globalThis.maltVerifyAuthentication = () => '{"profile":"malt.authentication/1","valid":true}'
+    globalThis.maltDeriveCoordinate = () => '{"kind":"index","index":"0"}'
+    globalThis.maltVerifyAuthentication = () => '{"profile":"malt.authentication/3","valid":true}'
     globalThis.maltVerifierReady = true
     return new Promise(() => {})
   }

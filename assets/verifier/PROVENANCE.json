@@ -1,18 +1,19 @@
 {
   "schema": "malt.ts-verifier.provenance/v1",
   "source_repository": "https://github.com/DeWebProtocol/malt-ts.git",
-  "build_inputs_sha256": "f6d894fa39215a1c87a1a35ee6afa1af59d79191dcb2aadd9c1eeb4331044fc0",
+  "build_inputs_sha256": "a09908180f8fb79c4e6136c24f46deabc93a54dca0bfe106ecf82e8384f4af8f",
   "core": {
     "module_path": "github.com/dewebprotocol/malt-core",
-    "module_version": "v0.0.9",
+    "module_version": "v0.0.10-rc.1",
     "source_repository": "https://github.com/DeWebProtocol/malt-core.git",
-    "source_commit": "e389418cf6715ae58a97255196833b410b0962d1",
-    "module_sum": "h1:e4jNMhZ0dkaiFFLfg/8xxUFAP7JK//8KLxqp78s2nso=",
+    "source_commit": "933ef9824d5d852f819bdc91b244ce7b7e800706",
+    "module_sum": "h1:bZl8z4y0Uug6H79KAUBjwJ28RjOQouONTlF9Ede57sc=",
     "go_mod_sum": "h1:o6L8K9vJp5hyrVo3fUtSsj0rvNpcboOcOb3nQwnR/gs="
   },
   "target": "js/wasm",
   "exports": [
-    "maltVerifyAuthentication"
+    "maltVerifyAuthentication",
+    "maltDeriveCoordinate"
   ],
   "go_version": "go1.26.0",
   "go_toolchain": "go version go1.26.0 linux/amd64",

@@ -8,6 +8,7 @@ export interface VerificationResult extends JSONRecord {
 }
 
 export interface BrowserVerifierProvider {
+  derive(json: string, signal?: AbortSignal): Promise<string>
   authentication(json: string, signal?: AbortSignal): Promise<string>
   terminate(): void
 }
@@ -40,21 +41,17 @@ export declare function loadBrowserVerifier(options?: VerifierLoadOptions): Prom
 export declare function releaseBrowserVerifier(lease: VerifierLease): void
 
 /** uint64 decimal strings and base64 bytes follow the normative Core schema. */
-export type AuthenticationInput =
-  | { kind: 'index'; number: string }
-  | { kind: 'system'; number: string }
-  | { kind: 'key'; data: string }
-  | { kind: 'label'; data: string }
+export type AuthenticationLabel = string
 export interface AuthenticationRequest extends JSONRecord {
-  profile: 'malt.authentication/1'
+  profile: 'malt.authentication/3'
   root: string
-  steps?: AuthenticationInput[] | null
+  steps?: AuthenticationLabel[] | null
   operation: 'resolve' | 'binding' | 'range'
-  input?: AuthenticationInput
+  label?: AuthenticationLabel
   start?: string
   end?: string
 }
-export declare const authenticationPathVerifierProfile: 'malt.authentication/1'
+export declare const authenticationPathVerifierProfile: 'malt.authentication/3'
 export declare function createAuthenticationVerification(options: {
   request: AuthenticationRequest; result: JSONRecord
 }): JSONRecord

@@ -22,6 +22,6 @@ fi
 for backend in all kzg ipa; do
 	node "${repo_root}/scripts/run-authentication-wasm.mjs" verifier \
 	"${verifier_root}/malt-verifier.wasm" "${verifier_root}/wasm_exec.js" \
-	"${malt_module_dir}/conformance/authentication-v1.json" "${backend}"
+	"${malt_module_dir}/conformance/authentication-v2.json" "${backend}"
 done
 printf 'malt-ts verifier passes the MALT %s conformance corpus.\n' "${malt_version}"

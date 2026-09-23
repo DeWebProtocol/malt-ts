@@ -27,7 +27,7 @@ fi
 expected_go_version="go${go_directive}"
 pin="$("${repo_root}/scripts/resolve-core.sh")"
 IFS=$'\t' read -r _ _ core_module_dir _ _ <<<"${pin}"
-expected_authentication_corpus_sha256="$(sha256sum "${core_module_dir}/conformance/authentication-v1.json" | awk '{print $1}')"
+expected_authentication_corpus_sha256="$(sha256sum "${core_module_dir}/conformance/authentication-v2.json" | awk '{print $1}')"
 expected_commit="$(git -C "${repo_root}" rev-parse HEAD)"
 expected_epoch="$(git -C "${repo_root}" show -s --format=%ct HEAD)"
 expected_build_inputs="$("${repo_root}/scripts/build-wasm.sh" --print-source-digest)"
@@ -84,7 +84,7 @@ AUTHENTICATION_CORPUS_SHA256="${expected_authentication_corpus_sha256}" node -e 
 	const version = /^v[0-9]+\.[0-9]+\.[0-9]+(?:[.-][0-9A-Za-z.-]+)?$/
 	const expectedCodegen = {CGO_ENABLED: "0", GOEXPERIMENT: "none", GOWASM: "", GOFIPS140: "off"}
 	const expectedCorpora = {
-		authentication: {schema: "malt.conformance.authentication/1", sha256: process.env.AUTHENTICATION_CORPUS_SHA256},
+		authentication: {schema: "malt.conformance.authentication/2", sha256: process.env.AUTHENTICATION_CORPUS_SHA256},
 	}
 	const toolchain = /^go version (go[0-9]+\.[0-9]+\.[0-9]+) ([a-z0-9]+)\/([a-z0-9]+)$/.exec(manifest.go_toolchain || "")
 	if (manifest.schema !== "malt.ts-wasm-release/v1" ||

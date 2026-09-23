@@ -41,14 +41,14 @@ cp "${go_root}/lib/wasm/wasm_exec.js" "${output}/writer/wasm_exec.js"
 cp "${go_root}/lib/wasm/wasm_exec.js" "${output}/verifier/wasm_exec.js"
 cp "${repo_root}/assets/writer/malt-writer-worker.mjs" "${repo_root}/assets/writer/malt-writer-workers.mjs" "${output}/writer/"
 node "${repo_root}/scripts/run-authentication-wasm.mjs" verifier "${output}/verifier/malt-verifier.wasm" \
- "${output}/verifier/wasm_exec.js" "${core_root}/conformance/authentication-v1.json" all
+ "${output}/verifier/wasm_exec.js" "${core_root}/conformance/authentication-v2.json" all
 for profile in kzg direct compact fast; do
  backend=ipa
  wasm="${output}/writer/malt-writer-ipa-${profile}.wasm"
  profile_arg="${profile}"
  if [[ "${profile}" == kzg ]]; then backend=kzg; wasm="${output}/writer/malt-writer-kzg.wasm"; profile_arg=; fi
  node "${repo_root}/scripts/run-authentication-wasm.mjs" writer "${wasm}" "${output}/writer/wasm_exec.js" \
-  "${core_root}/conformance/authentication-v1.json" "${backend}"
+  "${core_root}/conformance/authentication-v2.json" "${backend}"
  node "${repo_root}/scripts/run-retained-writer-wasm.mjs" "${wasm}" "${output}/writer/wasm_exec.js" "${backend}" "${profile_arg}"
  node "${repo_root}/scripts/run-authentication-batch-wasm.mjs" "${wasm}" "${output}/writer/wasm_exec.js" "${backend}" "${profile_arg}"
 done

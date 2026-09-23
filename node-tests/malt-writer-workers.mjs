@@ -139,8 +139,8 @@ test("request errors keep the selected Worker alive", async () => {
   const bootstrap = writer.createAuthentication("kzg", new Uint8Array([1]));
   const bootstrapRequest = await worker.nextRequest();
   assert.equal(bootstrapRequest.method, "createAuthentication");
-  worker.respond(bootstrapRequest, { result: '{"profile":"malt.authentication/0"}' });
-  assert.equal(await bootstrap, '{"profile":"malt.authentication/0"}');
+  worker.respond(bootstrapRequest, { result: '{"profile":"malt.authentication/2"}' });
+  assert.equal(await bootstrap, '{"profile":"malt.authentication/2"}');
 
   const invalidLoad = writer.importAuthentication("kzg", new Uint8Array([1]));
   const invalidRequest = await worker.nextRequest();
