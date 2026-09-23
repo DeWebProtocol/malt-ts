@@ -11,9 +11,9 @@ writer semantics independently in TypeScript.
 
 ## Version and Core release
 
-The package asset binding is `0.0.2`, built against the published
-`malt-core v0.0.9` release at commit
-`e389418cf6715ae58a97255196833b410b0962d1`.
+The package asset binding is `0.0.3-rc.1`, built against the published
+`malt-core v0.0.10-rc.1` release at commit
+`933ef9824d5d852f819bdc91b244ce7b7e800706`.
 [`malt-core.lock.json`](./malt-core.lock.json) binds that tag, commit, Go module
 checksums. The `malt.ts-core-lock/v2` lock binds Core source only; Core WASM
 assets are not required. This repository exclusively owns WASM entrypoints,
@@ -100,10 +100,13 @@ from committing source.
 ## Authentication API
 
 `verifyAuthenticationLocally({request, result, ...options})` verifies the
-caller-selected Root, typed steps and binding/range operation through Core.
-`malt.authentication/1` also authenticates early path absence. Typed inputs
-preserve base64 bytes and decimal uint64 strings; JavaScript performs no
-input hashing or application path normalization.
+caller-selected Root, label steps and binding/range operation through Core.
+`malt.authentication/3` also authenticates early path absence. Labels are
+base64-encoded opaque bytes. `encodeIndexLabel(bigint)` serializes Direct
+indices as eight unsigned big-endian bytes, and `encodeKeyLabel(Uint8Array)`
+serializes Direct 32-byte keys. `deriveCoordinate({profile, label})` executes
+Core derivation in the verifier Worker and returns a key or a bigint index.
+JavaScript performs no label hashing or application path normalization.
 
 `prepareAuthentication(backend, stateJSON)` builds a complete candidate.
 `updateAuthentication(backend, candidateJSON, stateJSON)` verifies a complete
@@ -161,7 +164,7 @@ session snapshot compatibility APIs. Worker readiness requires the complete
 current ABI. There are no forwarding aliases or optional old-runtime exports.
 
 The `malt-core.lock.json` and packaged binary assets identify the published
-Core `v0.0.9` release. Its current host and batch APIs are bound to the
+Core `v0.0.10-rc.1` release. Its current host and batch APIs are bound to the
 exact release tag, source commit, and module checksums.
 Source integration checks remain separate from this published release binding.
 

@@ -696,7 +696,7 @@ it('routes retained authentication operations without sending a complete base ag
   })
   const state = new TextEncoder().encode('{}')
   const internalHandle = new TextEncoder().encode('1')
-  const delta = new TextEncoder().encode('{"profile":"malt.authentication-delta/0","changes":[]}')
+  const delta = new TextEncoder().encode('{"profile":"malt.authentication-delta/1","changes":[]}')
   const created = JSON.parse(await writer.createAuthentication('kzg', state))
   const handle = new TextEncoder().encode(created.handle)
   await writer.applyAuthentication('kzg', handle, delta)

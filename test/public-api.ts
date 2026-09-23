@@ -16,7 +16,7 @@ void maltWasmAssetsDirectory()
 void versionedWasmAssetsPlugin()
 const lease = createBrowserVerifierLease()
 void loadBrowserVerifier({ lease }).then(() => releaseBrowserVerifier(lease))
-void verifyAuthenticationLocally({ request: { profile: 'malt.authentication/1', root: 'root', operation: 'resolve', steps: [] }, result: {} })
+void verifyAuthenticationLocally({ request: { profile: 'malt.authentication/3', root: 'root', operation: 'resolve', steps: [] }, result: {} })
 void createBrowserMaltWriter({ ipaPreference: 'auto' })
 
 void createBrowserMaltWriter({}).then(async writer => {
@@ -34,5 +34,5 @@ void createBrowserMaltWriter({}).then(async writer => {
 })
 
 // @ts-expect-error retired query profiles are not accepted by the public verifier
-const retiredQuery: import("../types/verifier").AuthenticationRequest = { profile: "malt.authentication/0", root: "root", operation: "resolve", steps: [] }
+const retiredQuery: import("../types/verifier").AuthenticationRequest = { profile: "malt.authentication/2", root: "root", operation: "resolve", steps: [] }
 void retiredQuery

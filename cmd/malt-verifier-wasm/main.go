@@ -12,6 +12,7 @@ import (
 )
 
 func main() {
+	registerCoordinateDerivation()
 	backend := requestedBackend()
 	if err := registerAuthenticationVerifier(backend); err != nil {
 		js.Global().Set("maltVerifierInitError", err.Error())

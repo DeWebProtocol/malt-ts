@@ -26,7 +26,7 @@ it('starts with only typed exports and rejects the retired artifact operation', 
     worker.postMessage({ type: 'verify', id: 2, kind: 'authentication', json: '{}' })
     expect((await current)[0]).toEqual({
       type: 'result', id: 2,
-      result: '{"profile":"malt.authentication/1","valid":true}'
+      result: '{"profile":"malt.authentication/3","valid":true}'
     })
   } finally {
     await worker.terminate()

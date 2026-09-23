@@ -22,8 +22,19 @@ while (typeof globalThis[name] !== 'function') {
   await new Promise(resolve => setTimeout(resolve, 10))
 }
 const corpus = JSON.parse(await readFile(corpusPath, 'utf8'))
-assert.equal(corpus.schema, 'malt.conformance.authentication/1')
+assert.equal(corpus.schema, 'malt.conformance.authentication/2')
 if (kind === 'verifier') {
+  const derive = (profile, bytes) => JSON.parse(globalThis.maltDeriveCoordinate(profile, bytes))
+  for (const index of [0n, 42n, 9007199254740993n, 18446744073709551615n]) {
+    const label = new Uint8Array(8)
+    new DataView(label.buffer).setBigUint64(0, index, false)
+    assert.deepEqual(derive(3, label), {kind: 'index', index: String(index)})
+  }
+  const key = Uint8Array.from({length: 32}, (_, i) => i)
+  assert.deepEqual(derive(3, key), {kind:'key', key: Buffer.from(key).toString('base64')})
+  assert.deepEqual(derive(4, new TextEncoder().encode('@payload')), {kind:'key', key: 'WG2RKG7FVDG1oDI45hXWKHCvy9y+sUC28l0lMcxB8kc='})
+  for (const id of [0, 1, 2, 255]) assert(derive(id, key).error)
+  for (const bytes of [new Uint8Array(), new TextEncoder().encode('42'), new Uint8Array(33)]) assert(derive(3, bytes).error)
   for (const vector of corpus.vectors) {
     const result = JSON.parse(globalThis[name](JSON.stringify(vector.verification)))
     assert.equal(result.profile, vector.verification.request.profile, vector.id)
@@ -37,17 +48,17 @@ if (kind === 'verifier') {
   console.log(`V0 WASM verifier ${backend} passed: ${corpus.vectors.length} vectors`)
 } else {
   const id = backend === 'ipa' ? 2 : 1
-  const state = { descriptor: { layout: 1, input_rule: 1, vc_profile: id }, entries: [
-    { input: { kind: 'label', data: 'YS9i' }, target: { '/': 'bafkqaaa' } },
-    { input: { kind: 'system', number: '1' }, target: { '/': 'bafkqaaa' } }
+  const state = { descriptor: { layout: 1, derivation_profile: 4, vc_profile: id }, entries: [
+    { label: 'YS9i', target: { '/': 'bafkqaaa' } },
+    { label: 'QHBheWxvYWQ=', target: { '/': 'bafkqaaa' } }
   ] }
   const candidate = JSON.parse(await globalThis[name](new TextEncoder().encode(JSON.stringify(state))))
   const expected = corpus.vectors.find(v => v.id === `profile-${id}.opaque-label`)
   assert.equal(candidate.root, expected.verification.request.root)
-  assert.equal(candidate.profile, 'malt.authentication/0')
+  assert.equal(candidate.profile, 'malt.authentication/2')
   assert(candidate.nodes.length > 0)
   await assert.rejects(() => globalThis[name]('{}'))
-  state.descriptor.input_rule = 255
+  state.descriptor.derivation_profile = 255
   await assert.rejects(() => globalThis[name](new TextEncoder().encode(JSON.stringify(state))))
   console.log(`V0 WASM writer ${backend}: exact native Root and rejection checks passed`)
 }

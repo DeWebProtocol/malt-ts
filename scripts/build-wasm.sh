@@ -166,7 +166,8 @@ PROVENANCE_PATH="${verifier_staging}/PROVENANCE.json" node -e '
 		},
 		target: "js/wasm",
 		exports: [
-			"maltVerifyAuthentication"
+			"maltVerifyAuthentication",
+		"maltDeriveCoordinate"
 		],
 		go_version: process.env.GO_VERSION,
 		go_toolchain: process.env.GO_TOOLCHAIN,

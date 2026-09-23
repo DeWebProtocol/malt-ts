@@ -1,4 +1,4 @@
-export const authenticationPathVerifierProfile = "malt.authentication/1"
+export const authenticationPathVerifierProfile = "malt.authentication/3"
 export const defaultVerifierRuntimeURL = '/verifier/wasm_exec.js'
 export const defaultVerifierWASMURL = '/verifier/malt-verifier.wasm'
 
@@ -158,6 +158,10 @@ class BrowserVerifierProvider {
 
   async ready() {
     await this.waitForWorker(this.workerSlot)
+  }
+
+  derive(json, signal) {
+    return this.verify("derive", json, signal)
   }
 
   authentication(json, signal) {

@@ -31,7 +31,7 @@ for profile in kzg direct compact fast; do
  wasm="${writer_root}/malt-writer-ipa-${profile}.wasm"
  profile_arg="${profile}"
  if [[ "${profile}" == kzg ]]; then backend=kzg; wasm="${writer_root}/malt-writer-kzg.wasm"; profile_arg=; fi
- node "${repo_root}/scripts/run-authentication-wasm.mjs" writer "${wasm}" "${writer_root}/wasm_exec.js" "${malt_module_dir}/conformance/authentication-v1.json" "${backend}"
+ node "${repo_root}/scripts/run-authentication-wasm.mjs" writer "${wasm}" "${writer_root}/wasm_exec.js" "${malt_module_dir}/conformance/authentication-v2.json" "${backend}"
  node "${repo_root}/scripts/run-retained-writer-wasm.mjs" "${wasm}" "${writer_root}/wasm_exec.js" "${backend}" "${profile_arg}"
  node "${repo_root}/scripts/run-authentication-batch-wasm.mjs" "${wasm}" "${writer_root}/wasm_exec.js" "${backend}" "${profile_arg}"
 done

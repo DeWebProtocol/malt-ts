@@ -1,3 +1,4 @@
+import { encodeIndexLabel } from '../src/coordinate.mjs'
 import assert from 'node:assert/strict'
 import { readFile } from 'node:fs/promises'
 import { Worker as NodeWorker } from 'node:worker_threads'
@@ -32,14 +33,14 @@ const writer = await createBrowserMaltWriter({
 const bytes = value => new TextEncoder().encode(value)
 const json = value => bytes(JSON.stringify(value))
 const state = {
-  descriptor: { layout: 2, input_rule: 0, vc_profile: 2 },
-  entries: [{ input: { kind: 'index', number: '0' }, target: { '/': 'bafkqaaa' } }]
+  descriptor: { layout: 2, derivation_profile: 3, vc_profile: 2 },
+  entries: [{ label: encodeIndexLabel('0'), target: { '/': 'bafkqaaa' } }]
 }
 try {
   const base = JSON.parse(await writer.createAuthentication('ipa', json(state)))
   const next = JSON.parse(await writer.applyAuthentication('ipa', bytes(base.handle), json({
-    profile: 'malt.authentication-delta/0',
-    changes: [{ input: { kind: 'index', number: '0' }, before: 'bafkqaaa', after: 'bafkreigh2akiscaildcw4535x7k5vfhq56bqddhziq3p4mwfmlz4vfu2ta' }]
+    profile: 'malt.authentication-delta/1',
+    changes: [{ label: encodeIndexLabel('0'), before: 'bafkqaaa', after: 'bafkreigh2akiscaildcw4535x7k5vfhq56bqddhziq3p4mwfmlz4vfu2ta' }]
   })))
   assert.notEqual(next.root, base.root)
   const exported = JSON.parse(await writer.exportAuthentication('ipa', bytes(next.handle)))

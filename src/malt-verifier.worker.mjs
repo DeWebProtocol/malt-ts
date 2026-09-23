@@ -98,6 +98,8 @@ async function verify({ id, kind, json }) {
 
 function selectVerifier(kind) {
   switch (kind) {
+    case 'derive':
+      return (json) => { const { profile, label } = JSON.parse(json); return globalThis.maltDeriveCoordinate(profile, Uint8Array.from(atob(label), (c) => c.charCodeAt(0))) }
     case 'authentication':
       return globalThis.maltVerifyAuthentication
     default:
@@ -115,7 +117,7 @@ async function waitForProvider() {
     if (Date.now() >= deadline) throw new Error('local verifier initialization timed out')
     await new Promise((resolve) => setTimeout(resolve, 10))
   }
-  for (const name of ['maltVerifyAuthentication']) {
+  for (const name of ['maltVerifyAuthentication', 'maltDeriveCoordinate']) {
     if (typeof globalThis[name] !== 'function') throw new Error(`local verifier did not register ${name}`)
   }
 
