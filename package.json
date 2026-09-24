@@ -1,6 +1,6 @@
 {
   "name": "@dewebprotocol/malt",
-  "version": "0.0.3-rc.1",
+  "version": "0.0.3-rc.2",
   "description": "Stable TypeScript and browser WASM SDK for MALT",
   "type": "module",
   "license": "Apache-2.0",
