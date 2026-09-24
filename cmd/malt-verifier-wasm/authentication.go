@@ -6,10 +6,10 @@ import (
 	"fmt"
 	"syscall/js"
 
+	"github.com/dewebprotocol/malt-core/maltcid"
 	"github.com/dewebprotocol/malt-core/protocol"
 	"github.com/dewebprotocol/malt-core/sdk/authentication"
 	authbuiltin "github.com/dewebprotocol/malt-core/sdk/authentication/builtin"
-	"github.com/dewebprotocol/malt-core/wire/maltcid"
 )
 
 func registerAuthenticationVerifier(backend string) error {
