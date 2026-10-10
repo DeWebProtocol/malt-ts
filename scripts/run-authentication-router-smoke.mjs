@@ -33,13 +33,13 @@ const writer = await createBrowserMaltWriter({
 const bytes = value => new TextEncoder().encode(value)
 const json = value => bytes(JSON.stringify(value))
 const state = {
-  descriptor: { layout: 2, derivation_profile: 3, vc_profile: 2 },
+  descriptor: { layout: 3, derivation_profile: 3, vc_profile: 2 },
   entries: [{ label: encodeIndexLabel('0'), target: { '/': 'bafkqaaa' } }]
 }
 try {
   const base = JSON.parse(await writer.createAuthentication('ipa', json(state)))
   const next = JSON.parse(await writer.applyAuthentication('ipa', bytes(base.handle), json({
-    profile: 'malt.authentication-delta/1',
+    profile: 'malt.authentication-delta/2',
     changes: [{ label: encodeIndexLabel('0'), before: 'bafkqaaa', after: 'bafkreigh2akiscaildcw4535x7k5vfhq56bqddhziq3p4mwfmlz4vfu2ta' }]
   })))
   assert.notEqual(next.root, base.root)

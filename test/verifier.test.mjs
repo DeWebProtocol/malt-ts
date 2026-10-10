@@ -9,12 +9,12 @@ function typedRoot(codec, size) {
 function verification(from) {
   return JSON.stringify({
     request: {
-      profile: 'malt.authentication/3',
+      profile: 'malt.authentication/5',
       root: from,
       operation: 'resolve', steps: ['ZG9jcw==']
     },
     result: {
-      profile: 'malt.authentication/3',
+      profile: 'malt.authentication/5',
       resolved: from, traversal: { results: [] }
     }
   })
@@ -304,7 +304,7 @@ describe('browser verifier workers', () => {
 
   it('passes an absent typed binding and the unchanged selected input to Core', async () => {
   const { verifyAuthenticationLocally } = await import('../src/verifier.mjs')
-  const q = { profile: 'malt.authentication/3', root: typedRoot(0x300104, 48), steps: [], operation: 'binding', label: 'bWlzc2luZw==' }
+  const q = { profile: 'malt.authentication/5', root: typedRoot(0x300104, 48), steps: [], operation: 'binding', label: 'bWlzc2luZw==' }
   const result = { profile: q.profile, resolved: q.root, binding: { present: false }, traversal: { results: [] } }
   const provider = { authentication: vi.fn(async (json) => {
     expect(JSON.parse(json)).toEqual({ request: q, result })
@@ -320,7 +320,7 @@ describe('browser verifier workers', () => {
     let receiver = 'not-called'
     function provider() {
       receiver = this
-      return JSON.stringify({ profile: 'malt.authentication/3', valid: true })
+      return JSON.stringify({ profile: 'malt.authentication/5', valid: true })
     }
 
     const result = await verifyAuthenticationLocally({

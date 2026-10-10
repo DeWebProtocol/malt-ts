@@ -11,9 +11,9 @@ writer semantics independently in TypeScript.
 
 ## Version and Core release
 
-The package asset binding is `0.0.3-rc.4`, built against the published
-`malt-core v0.0.10-rc.4` release at commit
-`0d7b166d58d1c2e21ead96de9c66968caf630374`.
+The package asset binding is `0.0.3`, built against the published
+`malt-core v0.0.10` release at commit
+`aaa78737c35f82fe91bb3f749cfddbcb7953ed2b`.
 [`malt-core.lock.json`](./malt-core.lock.json) binds that tag, commit, Go module
 checksums. The `malt.ts-core-lock/v2` lock binds Core source only; Core WASM
 assets are not required. This repository exclusively owns WASM entrypoints,
@@ -101,7 +101,7 @@ from committing source.
 
 `verifyAuthenticationLocally({request, result, ...options})` verifies the
 caller-selected Root, label steps and binding/range operation through Core.
-`malt.authentication/3` also authenticates early path absence. Labels are
+`malt.authentication/5` also authenticates early path absence. Labels are
 base64-encoded opaque bytes. `encodeIndexLabel(bigint)` serializes Direct
 indices as eight unsigned big-endian bytes, and `encodeKeyLabel(Uint8Array)`
 serializes Direct 32-byte keys. `deriveCoordinate({profile, label})` executes
@@ -164,7 +164,7 @@ session snapshot compatibility APIs. Worker readiness requires the complete
 current ABI. There are no forwarding aliases or optional old-runtime exports.
 
 The `malt-core.lock.json` and packaged binary assets identify the published
-Core `v0.0.10-rc.4` release. Its current host and batch APIs are bound to the
+Core `v0.0.10` release. Its current host and batch APIs are bound to the
 exact release tag, source commit, and module checksums.
 Source integration checks remain separate from this published release binding.
 
@@ -184,7 +184,7 @@ current contracts to the exact release selected by the lock.
 ### WASM ownership and archives
 
 Core provides the Go SDK, cryptographic parameter metadata, and portable
-`conformance/authentication-v1.json` corpus. All JavaScript/WASM runners live
+`conformance/authentication-v3.json` corpus. All JavaScript/WASM runners live
 in this repository; tests never execute a Core-owned browser build or runner.
 `make test-wasm` tests the pinned published Core release. For a proposed Core
 source change, use the explicit non-release `scripts/test-core-source.sh`.
@@ -198,3 +198,9 @@ See [WASM release assets](docs/wasm-release-assets.md).
 `maltCoreRelease` exposes the Core version, commit, `moduleSum`, and `goModSum`.
 The former Core WASM manifest/asset-set properties are removed. Consumers use
 this package's asset checksums and build provenance for the WASM it distributes.
+
+The package uses root-only Positional metadata: `count` plus an optional
+opaque `payload_cid`. Range bounds are element indices, and non-root vectors
+have no reserved metadata slot. Application JSON decoding stays in consumers.
+The packaged verifier and writer assets are built from the exact audited Core
+release above and pass its `authentication-v3.json` conformance corpus.

@@ -2,7 +2,7 @@ import { encodeIndexLabel } from '../src/coordinate.mjs'
 import { describe, it, expect } from 'vitest'
 import { createAuthenticationVerification, verifyAuthenticationLocally } from '../src/index.mjs'
 
-const profile = 'malt.authentication/3'
+const profile = 'malt.authentication/5'
 const request = { profile, root: 'caller-root', operation: 'binding', steps: [],
   label: encodeIndexLabel('18446744073709551615') }
 const result = { profile, resolved: 'caller-root', traversal: { steps: [] } }
@@ -37,7 +37,7 @@ describe('typed authentication bridge', () => {
 })
 
 it('binds path absence to the new request profile without reinterpreting steps', async () => {
-  const profile = 'malt.authentication/3'
+  const profile = 'malt.authentication/5'
   const q = { ...request, profile, operation: 'resolve', label: undefined,
     steps: ['bWlzc2luZw=='] }
   const proof = { profile, resolved: '', absent_step: '0', traversal: { results: [] } }
@@ -46,14 +46,14 @@ it('binds path absence to the new request profile without reinterpreting steps',
     return JSON.stringify({ profile, valid: true })
   } }
   expect((await verifyAuthenticationLocally({ request: q, result: proof, provider })).valid).toBe(true)
-  expect((await verifyAuthenticationLocally({ request: q, result: { ...result, profile: 'malt.authentication/2' }, provider })).valid).toBe(false)
+  expect((await verifyAuthenticationLocally({ request: q, result: { ...result, profile: 'malt.authentication/4' }, provider })).valid).toBe(false)
 })
 
 it('rejects the retired query profile before calling WASM', async () => {
   let called = false
   const checked = await verifyAuthenticationLocally({
-    request: { ...request, profile: 'malt.authentication/2' },
-    result: { ...result, profile: 'malt.authentication/2' },
+    request: { ...request, profile: 'malt.authentication/4' },
+    result: { ...result, profile: 'malt.authentication/4' },
     provider: { authentication() { called = true; throw new Error('unexpected call') } }
   })
   expect(checked.valid).toBe(false)

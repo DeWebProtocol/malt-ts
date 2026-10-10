@@ -43,7 +43,7 @@ export declare function releaseBrowserVerifier(lease: VerifierLease): void
 /** uint64 decimal strings and base64 bytes follow the normative Core schema. */
 export type AuthenticationLabel = string
 export interface AuthenticationRequest extends JSONRecord {
-  profile: 'malt.authentication/3'
+  profile: 'malt.authentication/5'
   root: string
   steps?: AuthenticationLabel[] | null
   operation: 'resolve' | 'binding' | 'range'
@@ -51,7 +51,7 @@ export interface AuthenticationRequest extends JSONRecord {
   start?: string
   end?: string
 }
-export declare const authenticationPathVerifierProfile: 'malt.authentication/3'
+export declare const authenticationPathVerifierProfile: 'malt.authentication/5'
 export declare function createAuthenticationVerification(options: {
   request: AuthenticationRequest; result: JSONRecord
 }): JSONRecord
