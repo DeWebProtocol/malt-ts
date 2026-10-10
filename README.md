@@ -11,9 +11,9 @@ writer semantics independently in TypeScript.
 
 ## Version and Core release
 
-The package asset binding is `0.0.3`, built against the published
-`malt-core v0.0.10` release at commit
-`aaa78737c35f82fe91bb3f749cfddbcb7953ed2b`.
+The package asset binding is `0.0.4`, built against the published
+`malt-core v0.0.11-rc.1` release at commit
+`704ee38cdafaa628b713b2965b6d407ab0e4205b`.
 [`malt-core.lock.json`](./malt-core.lock.json) binds that tag, commit, Go module
 checksums. The `malt.ts-core-lock/v2` lock binds Core source only; Core WASM
 assets are not required. This repository exclusively owns WASM entrypoints,
@@ -107,6 +107,10 @@ indices as eight unsigned big-endian bytes, and `encodeKeyLabel(Uint8Array)`
 serializes Direct 32-byte keys. `deriveCoordinate({profile, label})` executes
 Core derivation in the verifier Worker and returns a key or a bigint index.
 JavaScript performs no label hashing or application path normalization.
+Prefix layout 4 authenticates exact original label bytes and targets; distinct
+labels at the same full coordinate are errors. Layout 1 is rejected without a
+compatibility reader. Rebuild old Prefix state and its dependent parent Roots;
+Positional layout 3 and Root V=0 are unchanged.
 
 `prepareAuthentication(backend, stateJSON)` builds a complete candidate.
 `updateAuthentication(backend, candidateJSON, stateJSON)` verifies a complete
@@ -120,18 +124,20 @@ Handles are opaque identities bound to this router, backend and Worker.
 `importAuthentication` transfers a candidate's complete ArrayBuffer when
 possible; pass a copy if the caller needs those bytes afterwards.
 
-`applyAuthentication` takes a handle and a `malt.authentication-delta/0`
+`applyAuthentication` takes a handle and a `malt.authentication-delta/2`
 change set. It returns a new independent handle and leaves its base usable.
 `exportAuthentication` explicitly exports a complete candidate. Retained
 updates do not resend or export the complete base.
 
 ```ts
+import { encodeIndexLabel } from '@dewebprotocol/malt'
+
 const encode = (value: unknown) => new TextEncoder().encode(JSON.stringify(value))
 const handleBytes = (handle: string) => new TextEncoder().encode(handle)
 const base = JSON.parse(await writer.createAuthentication('kzg', encode(state)))
 const next = JSON.parse(await writer.applyAuthentication('kzg', handleBytes(base.handle), encode({
-  profile: 'malt.authentication-delta/0',
-  changes: [{ input: { kind: 'index', number: '0' }, before: oldCID, after: newCID }]
+  profile: 'malt.authentication-delta/2',
+  changes: [{ label: encodeIndexLabel(0n), before: oldCID, after: newCID }]
 })))
 const candidate = JSON.parse(await writer.exportAuthentication('kzg', handleBytes(next.handle)))
 await writer.discardAuthentication('kzg', handleBytes(base.handle))
@@ -146,12 +152,12 @@ cancels pending operations; a subsequent request creates a new generation.
 ### Materialization batches and receipts
 
 `validateAuthenticationBatch(backend, batchJSON)` verifies all candidates and
-returns Core's digest of the exact `malt.authentication-batch/0` batch.
+returns Core's digest of the exact `malt.authentication-batch/2` batch.
 Candidates appear before parents and lineage successors. A bootstrap batch
 includes its newly constructed base.
 
 `validateAuthenticationReceipt(backend, batchJSON, receiptJSON)` checks the
-`malt.authentication-receipt/0` transaction ID, base, final Root, digest and
+`malt.authentication-receipt/2` transaction ID, base, final Root, digest and
 durable boundary. It returns the final Root without modifying retained state.
 Receipts acknowledge persistence; they neither prove a portable state
 transition nor publish a head or grant client trust. Applications own durable
@@ -164,7 +170,7 @@ session snapshot compatibility APIs. Worker readiness requires the complete
 current ABI. There are no forwarding aliases or optional old-runtime exports.
 
 The `malt-core.lock.json` and packaged binary assets identify the published
-Core `v0.0.10` release. Its current host and batch APIs are bound to the
+Core `v0.0.11-rc.1` release. Its current host and batch APIs are bound to the
 exact release tag, source commit, and module checksums.
 Source integration checks remain separate from this published release binding.
 

@@ -23,7 +23,7 @@ assert.equal(globalThis.maltWriterLoadedBackend, backend)
 assert.equal(globalThis.maltWriterLoadedProfile, profile)
 for (const name of ['maltComputeClientRootV1', 'maltWriterBootstrapSessionV1', 'maltWriterLoadSessionV1', 'maltWriterPrepareSessionV1', 'maltWriterValidateReceiptV1']) assert.equal(globalThis[name], undefined)
 const json = value => new TextEncoder().encode(JSON.stringify(value))
-const state = { descriptor: { layout: 1, derivation_profile: 4, vc_profile: backend === 'ipa' ? 2 : 1 }, entries: [] }
+const state = { descriptor: { layout: 4, derivation_profile: 4, vc_profile: backend === 'ipa' ? 2 : 1 }, entries: [] }
 const base = JSON.parse(await globalThis.maltPrepareAuthentication(json(state)))
 state.entries.push({ label: 'ZmlsZQ==', target: { '/': 'bafkqaaa' } })
 const next = JSON.parse(await globalThis.maltUpdateAuthentication(json(base), json(state)))
