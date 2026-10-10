@@ -58,7 +58,7 @@ try {
 
   const bytes = value => new TextEncoder().encode(value);
   const json = value => bytes(JSON.stringify(value));
-  const state = { descriptor: { layout: 1, derivation_profile: 4, vc_profile: backend === 'ipa' ? 2 : 1 }, entries: [] };
+  const state = { descriptor: { layout: 4, derivation_profile: 4, vc_profile: backend === 'ipa' ? 2 : 1 }, entries: [] };
   const base = JSON.parse(await writer.createAuthentication(backend, json(state)));
   const next = JSON.parse(await writer.applyAuthentication(backend, bytes(base.handle), json({
     profile: 'malt.authentication-delta/2', changes: [{ label: 'ZmlsZQ==', after: 'bafkqaaa' }]

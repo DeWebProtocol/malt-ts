@@ -48,9 +48,10 @@ if (kind === 'verifier') {
   console.log(`V0 WASM verifier ${backend} passed: ${corpus.vectors.length} vectors`)
 } else {
   const id = backend === 'ipa' ? 2 : 1
-  const state = { descriptor: { layout: 1, derivation_profile: 4, vc_profile: id }, entries: [
+  const state = { descriptor: { layout: 4, derivation_profile: 4, vc_profile: id }, entries: [
     { label: 'YS9i', target: { '/': 'bafkqaaa' } },
-    { label: 'QHBheWxvYWQ=', target: { '/': 'bafkqaaa' } }
+    { label: 'QHBheWxvYWQ=', target: { '/': 'bafkqaaa' } },
+    { label: '', target: { '/': 'bafkqaaa' } }
   ] }
   const candidate = JSON.parse(await globalThis[name](new TextEncoder().encode(JSON.stringify(state))))
   const expected = corpus.vectors.find(v => v.id === `profile-${id}.opaque-label`)
@@ -58,6 +59,9 @@ if (kind === 'verifier') {
   assert.equal(candidate.profile, 'malt.authentication/4')
   assert(candidate.nodes.length > 0)
   await assert.rejects(() => globalThis[name]('{}'))
+  state.descriptor.layout = 1
+  await assert.rejects(() => globalThis[name](new TextEncoder().encode(JSON.stringify(state))))
+  state.descriptor.layout = 4
   state.descriptor.derivation_profile = 255
   await assert.rejects(() => globalThis[name](new TextEncoder().encode(JSON.stringify(state))))
   console.log(`V0 WASM writer ${backend}: exact native Root and rejection checks passed`)
