@@ -5,7 +5,7 @@ globalThis.Go = class {
   run() {
     globalThis.maltVerifierLoadedBackend = 'all'
     globalThis.maltDeriveCoordinate = () => '{"kind":"index","index":"0"}'
-    globalThis.maltVerifyAuthentication = () => '{"profile":"malt.authentication/3","valid":true}'
+    globalThis.maltVerifyAuthentication = () => '{"profile":"malt.authentication/5","valid":true}'
     globalThis.maltVerifierReady = true
     return new Promise(() => {})
   }

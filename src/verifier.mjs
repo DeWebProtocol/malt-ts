@@ -1,4 +1,4 @@
-export const authenticationPathVerifierProfile = "malt.authentication/3"
+export const authenticationPathVerifierProfile = "malt.authentication/5"
 export const defaultVerifierRuntimeURL = '/verifier/wasm_exec.js'
 export const defaultVerifierWASMURL = '/verifier/malt-verifier.wasm'
 

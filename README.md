@@ -101,7 +101,7 @@ from committing source.
 
 `verifyAuthenticationLocally({request, result, ...options})` verifies the
 caller-selected Root, label steps and binding/range operation through Core.
-`malt.authentication/3` also authenticates early path absence. Labels are
+`malt.authentication/5` also authenticates early path absence. Labels are
 base64-encoded opaque bytes. `encodeIndexLabel(bigint)` serializes Direct
 indices as eight unsigned big-endian bytes, and `encodeKeyLabel(Uint8Array)`
 serializes Direct 32-byte keys. `deriveCoordinate({profile, label})` executes
@@ -198,3 +198,9 @@ See [WASM release assets](docs/wasm-release-assets.md).
 `maltCoreRelease` exposes the Core version, commit, `moduleSum`, and `goModSum`.
 The former Core WASM manifest/asset-set properties are removed. Consumers use
 this package's asset checksums and build provenance for the WASM it distributes.
+
+The source migration uses root-only Positional metadata: `count` plus an optional
+opaque `payload_cid`. Range bounds are element indices, and non-root vectors
+have no reserved metadata slot. Application JSON decoding stays in consumers.
+The source conformance runner uses `authentication-v3.json`; published assets
+must be regenerated from the matching audited Core release before distribution.

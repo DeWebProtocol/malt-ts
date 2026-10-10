@@ -22,7 +22,7 @@ while (typeof globalThis[name] !== 'function') {
   await new Promise(resolve => setTimeout(resolve, 10))
 }
 const corpus = JSON.parse(await readFile(corpusPath, 'utf8'))
-assert.equal(corpus.schema, 'malt.conformance.authentication/2')
+assert.equal(corpus.schema, 'malt.conformance.authentication/3')
 if (kind === 'verifier') {
   const derive = (profile, bytes) => JSON.parse(globalThis.maltDeriveCoordinate(profile, bytes))
   for (const index of [0n, 42n, 9007199254740993n, 18446744073709551615n]) {
@@ -55,7 +55,7 @@ if (kind === 'verifier') {
   const candidate = JSON.parse(await globalThis[name](new TextEncoder().encode(JSON.stringify(state))))
   const expected = corpus.vectors.find(v => v.id === `profile-${id}.opaque-label`)
   assert.equal(candidate.root, expected.verification.request.root)
-  assert.equal(candidate.profile, 'malt.authentication/2')
+  assert.equal(candidate.profile, 'malt.authentication/4')
   assert(candidate.nodes.length > 0)
   await assert.rejects(() => globalThis[name]('{}'))
   state.descriptor.derivation_profile = 255

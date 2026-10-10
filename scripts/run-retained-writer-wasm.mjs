@@ -30,7 +30,7 @@ const json = value => text(JSON.stringify(value))
 const first = 'bafkqaaa'
 const second = 'bafkreigh2akiscaildcw4535x7k5vfhq56bqddhziq3p4mwfmlz4vfu2ta'
 const state = {
-  descriptor: { layout: 2, derivation_profile: 3, vc_profile: backend === 'ipa' ? 2 : 1 },
+  descriptor: { layout: 3, derivation_profile: 3, vc_profile: backend === 'ipa' ? 2 : 1 },
   entries: Array.from({ length: 256 }, (_, i) => ({
     label: encodeIndexLabel(String(i)), target: { '/': first }
   }))
@@ -39,7 +39,7 @@ const base = JSON.parse(await globalThis.maltCreateAuthentication(json(state)))
 assert.equal(typeof base.handle, 'string')
 assert.equal(base.nodes, undefined)
 const delta = {
-  profile: 'malt.authentication-delta/1',
+  profile: 'malt.authentication-delta/2',
   changes: [{ label: encodeIndexLabel('255'), before: first, after: second }]
 }
 const next = JSON.parse(await globalThis.maltApplyAuthentication(text(base.handle), json(delta)))
