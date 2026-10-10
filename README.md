@@ -11,8 +11,8 @@ writer semantics independently in TypeScript.
 
 ## Version and Core release
 
-The package asset binding is `0.0.3-rc.5`, built against the published
-`malt-core v0.0.10-rc.5` release at commit
+The package asset binding is `0.0.3`, built against the published
+`malt-core v0.0.10` release at commit
 `aaa78737c35f82fe91bb3f749cfddbcb7953ed2b`.
 [`malt-core.lock.json`](./malt-core.lock.json) binds that tag, commit, Go module
 checksums. The `malt.ts-core-lock/v2` lock binds Core source only; Core WASM
@@ -164,7 +164,7 @@ session snapshot compatibility APIs. Worker readiness requires the complete
 current ABI. There are no forwarding aliases or optional old-runtime exports.
 
 The `malt-core.lock.json` and packaged binary assets identify the published
-Core `v0.0.10-rc.5` release. Its current host and batch APIs are bound to the
+Core `v0.0.10` release. Its current host and batch APIs are bound to the
 exact release tag, source commit, and module checksums.
 Source integration checks remain separate from this published release binding.
 
