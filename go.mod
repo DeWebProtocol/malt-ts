@@ -2,7 +2,7 @@ module github.com/dewebprotocol/malt-ts
 
 go 1.26.8
 
-require github.com/dewebprotocol/malt-core v0.0.11-rc.1
+require github.com/dewebprotocol/malt-core v0.0.11-rc.2
 
 require (
 	github.com/bits-and-blooms/bitset v1.25.0 // indirect
@@ -19,7 +19,7 @@ require (
 	github.com/multiformats/go-varint v0.1.0 // indirect
 	github.com/spaolacci/murmur3 v1.1.0 // indirect
 	golang.org/x/crypto v0.57.0 // indirect
-	golang.org/x/sync v0.23.0 // indirect
-	golang.org/x/sys v0.48.0 // indirect
+	golang.org/x/sync v0.24.0 // indirect
+	golang.org/x/sys v0.49.0 // indirect
 	lukechampine.com/blake3 v1.4.1 // indirect
 )
