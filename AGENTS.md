@@ -43,6 +43,8 @@ the combined MALT workspace.
   `malt-integration`. In the latter case, also read the integration root's
   `AGENTS.md`. Keep malt-ts outside its native `go.work`; its Git link selects
   the package source, while `malt-core.lock.json` selects the published Core.
+  The integration repository is the parent checkout; its native workspace is
+  `../go.work` and does not include this package.
 - Set `GOWORK=off` for locked package build, verification, and release
   commands, including npm or Make commands that launch Go. An ancestor
   workspace must not substitute local Core source for the locked release.
