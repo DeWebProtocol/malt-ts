@@ -2,7 +2,7 @@ module github.com/dewebprotocol/malt-ts
 
 go 1.26.8
 
-require github.com/dewebprotocol/malt-core v0.0.11-rc.2
+require github.com/dewebprotocol/malt-core v0.0.11-rc.4
 
 require (
 	github.com/bits-and-blooms/bitset v1.25.0 // indirect

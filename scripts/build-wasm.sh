@@ -28,9 +28,9 @@ build_inputs_digest() {
 						"${source_file}" >&2
 					exit 1
 				}
-				sha256sum "${source_file}"
+				sha256sum --text "${source_file}"
 			done |
-			sha256sum |
+			sha256sum --text |
 			awk '{print $1}'
 	)
 }
@@ -255,11 +255,11 @@ PROVENANCE_PATH="${writer_staging}/PROVENANCE.json" node -e '
 
 (
 	cd "${verifier_staging}"
-	sha256sum malt-verifier.wasm wasm_exec.js PROVENANCE.json >SHA256SUMS
+	sha256sum --text malt-verifier.wasm wasm_exec.js PROVENANCE.json >SHA256SUMS
 )
 (
 	cd "${writer_staging}"
-	sha256sum \
+	sha256sum --text \
 		malt-writer-kzg.wasm \
 		malt-writer-ipa-direct.wasm \
 		malt-writer-ipa-compact.wasm \

@@ -4,8 +4,8 @@ github.com/consensys/gnark-crypto v0.22.0 h1:RYH7FX1/zkmNrSiABo70HAqew41SRUsoluK
 github.com/consensys/gnark-crypto v0.22.0/go.mod h1:HL8XflRG4cvau1PEG3CWBTD2kkzUzdlqZF6BBgy57F8=
 github.com/crate-crypto/go-kzg-4844 v1.1.0 h1:EN/u9k2TF6OWSHrCCDBBU6GLNMq88OspHHlMnHfoyU4=
 github.com/crate-crypto/go-kzg-4844 v1.1.0/go.mod h1:JolLjpSff1tCCJKaJx4psrlEdlXuJEC996PL3tTAFks=
-github.com/dewebprotocol/malt-core v0.0.11-rc.2 h1:n1znvAKDKeH+vlrZ7o1nvinro2CGb1LoBtf0O3WOPzQ=
-github.com/dewebprotocol/malt-core v0.0.11-rc.2/go.mod h1:uAbiKECccmR8MlDotFWLdAgp+JFStdSn2SqA6ILEXhA=
+github.com/dewebprotocol/malt-core v0.0.11-rc.4 h1:txnIBdjlVnQkPMUs6xxNwIEOoZxpQdJbmPDXkZbzgvM=
+github.com/dewebprotocol/malt-core v0.0.11-rc.4/go.mod h1:uAbiKECccmR8MlDotFWLdAgp+JFStdSn2SqA6ILEXhA=
 github.com/ipfs/go-cid v0.6.2 h1:VuGwJd+KJTaMJ4S4d5EEf9SXc17YUblS5axCbocn9YE=
 github.com/ipfs/go-cid v0.6.2/go.mod h1:Xhwg8NzHeK9xPCEZkCw4idzPiuNMpX3fARuI5Iwj1Lo=
 github.com/klauspost/cpuid/v2 v2.3.0 h1:S4CRMLnYUhGeDFDqkGriYKdfoFlDnMtqTiI/sFzhA9Y=

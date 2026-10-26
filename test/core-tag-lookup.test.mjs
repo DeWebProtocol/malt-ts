@@ -15,7 +15,17 @@ import { expect, it } from 'vitest'
 
 const resolver = path.resolve(process.cwd(), 'scripts/resolve-core-tag.sh')
 const moduleVersion = 'v0.0.7-rc.2'
-const realGit = execFileSync('which', ['git'], { encoding: 'utf8' }).trim()
+const realGit = execFileSync('bash', ['-c', 'command -v git'], { encoding: 'utf8' }).trim()
+
+function resolveTag(arguments_, options) {
+  // Git Bash prepends its own tools to inherited PATH on Windows. Add test
+  // doubles after Bash starts so the bounded-retry tests exercise them too.
+  return execFileSync('bash', ['-c',
+    'if [[ -n ${MALT_TEST_BIN:-} ]]; then export PATH="${MALT_TEST_BIN}:${PATH}"; fi; exec bash "$@"',
+    '--', resolver, ...arguments_
+  ], options)
+}
+
 
 function cleanGitEnvironment(extra = {}) {
   const environment = { ...process.env }
@@ -71,7 +81,9 @@ function retryEnvironment(root, gitScript) {
     attempts,
     sleeps,
     environment: cleanGitEnvironment({
-      PATH: `${bin}:${process.env.PATH}`,
+      MALT_TEST_BIN: process.platform === 'win32'
+        ? execFileSync('bash', ['-c', 'cygpath -u -- "$1"', '--', bin], { encoding: 'utf8' }).trim()
+        : bin,
       REAL_GIT: realGit,
       RETRY_ATTEMPTS_FILE: attempts
     })
@@ -112,7 +124,7 @@ it('ignores inherited Git command config that redirects the canonical remote', (
     const redirected = createTaggedRepository(root, 'redirected', 'redirected')
     expect(redirected.commit).not.toBe(canonical.commit)
 
-    const output = execFileSync(resolver, [canonical.url, moduleVersion], {
+    const output = resolveTag([canonical.url, moduleVersion], {
       encoding: 'utf8',
       env: {
         ...process.env,
@@ -136,7 +148,7 @@ it('retries transient canonical tag lookup failures with bounded backoff', () =>
   try {
     const canonical = createTaggedRepository(root, 'canonical', 'canonical')
     const retry = retryEnvironment(root, retryingGit)
-    const output = execFileSync(resolver, [canonical.url, moduleVersion], {
+    const output = resolveTag([canonical.url, moduleVersion], {
       encoding: 'utf8',
       env: retry.environment
     }).trim()
@@ -153,8 +165,7 @@ it('stops after three canonical tag lookup failures and preserves the error', ()
   const root = mkdtempSync(path.join(tmpdir(), 'malt-ts-core-tag-failure-test.'))
   try {
     const retry = retryEnvironment(root, failingGit)
-    expect(() => execFileSync(
-      resolver,
+    expect(() => resolveTag(
       ['https://github.com/DeWebProtocol/malt-core.git', moduleVersion],
       { encoding: 'utf8', env: retry.environment, stdio: 'pipe' }
     )).toThrow(/simulated permanent TLS failure/)

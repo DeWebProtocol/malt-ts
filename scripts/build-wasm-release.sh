@@ -70,11 +70,11 @@ authentication_corpus_sha256="$(sha256sum "${core_module_dir}/conformance/authen
 chmod 0644 "${verifier_staging}/"* "${writer_staging}/"*
 (
 	cd "${verifier_staging}"
-	sha256sum malt-verifier.wasm wasm_exec.js PROVENANCE.json >SHA256SUMS
+	sha256sum --text malt-verifier.wasm wasm_exec.js PROVENANCE.json >SHA256SUMS
 )
 (
 	cd "${writer_staging}"
-	sha256sum \
+	sha256sum --text \
 		malt-writer-kzg.wasm \
 		malt-writer-ipa-direct.wasm \
 		malt-writer-ipa-compact.wasm \
@@ -148,7 +148,7 @@ manifest_name="malt-wasm-release-${release_version}-${manifest_digest}.json"
 mv "${temporary}/WASM-RELEASE.json" "${temporary}/${manifest_name}"
 (
 	cd "${temporary}"
-	sha256sum "${verifier_archive}" "${writer_archive}" "${manifest_name}" >SHA256SUMS
+	sha256sum --text "${verifier_archive}" "${writer_archive}" "${manifest_name}" >SHA256SUMS
 )
 
 for artifact in "${verifier_archive}" "${writer_archive}" "${manifest_name}" SHA256SUMS; do
