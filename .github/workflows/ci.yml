@@ -49,8 +49,9 @@ jobs:
       - name: Rebuild and verify WASM
         run: |
           go test ./...
-          make test-wasm
-          git diff --exit-code -- assets
+          make check-wasm
+          make test-wasm WASM_OUT=dist/ci-wasm
+          node scripts/check-wasm-rebuild.mjs assets dist/ci-wasm
 
       - name: Verify reproducible WASM release archives
         run: make test-wasm-release
