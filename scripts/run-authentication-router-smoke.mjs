@@ -33,7 +33,7 @@ const writer = await createBrowserMaltWriter({
 const bytes = value => new TextEncoder().encode(value)
 const json = value => bytes(JSON.stringify(value))
 const state = {
-  descriptor: { layout: 3, derivation_profile: 3, vc_profile: 2 },
+  descriptor: { layout: 2, derivation_profile: 3, vc_profile: 2 },
   entries: [{ label: encodeIndexLabel('0'), target: { '/': 'bafkqaaa' } }]
 }
 try {

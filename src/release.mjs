@@ -1,8 +1,8 @@
-export const maltTSVersion = '0.0.6'
+export const maltTSVersion = '0.0.7'
 
 export const maltCoreRelease = Object.freeze({
-  version: 'v0.0.11-rc.4',
-  commit: '595f1e05aa86b0339addaa0f0e2ac6672faa8e00',
-  moduleSum: 'h1:txnIBdjlVnQkPMUs6xxNwIEOoZxpQdJbmPDXkZbzgvM=',
-  goModSum: 'h1:uAbiKECccmR8MlDotFWLdAgp+JFStdSn2SqA6ILEXhA='
+  version: 'v0.0.12-rc.2',
+  commit: '0c5dc0029bd89180f1ff9c8f87857c17aef6a094',
+  moduleSum: 'h1:5KqS5FXrRkBHki+PO4dgDS2A5MlcgDQD9CBKHuuGAk0=',
+  goModSum: 'h1:r3h6vMg1XN43S1N31hBrROPGP/w1+H5G4q3wiC3qL80='
 })

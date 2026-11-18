@@ -22,7 +22,7 @@ while (typeof globalThis[name] !== 'function') {
   await new Promise(resolve => setTimeout(resolve, 10))
 }
 const corpus = JSON.parse(await readFile(corpusPath, 'utf8'))
-assert.equal(corpus.schema, 'malt.conformance.authentication/3')
+assert.equal(corpus.schema, 'malt.conformance.authentication/4')
 if (kind === 'verifier') {
   const derive = (profile, bytes) => JSON.parse(globalThis.maltDeriveCoordinate(profile, bytes))
   for (const index of [0n, 42n, 9007199254740993n, 18446744073709551615n]) {
@@ -48,7 +48,7 @@ if (kind === 'verifier') {
   console.log(`V0 WASM verifier ${backend} passed: ${corpus.vectors.length} vectors`)
 } else {
   const id = backend === 'ipa' ? 2 : 1
-  const state = { descriptor: { layout: 4, derivation_profile: 4, vc_profile: id }, entries: [
+  const state = { descriptor: { layout: 1, derivation_profile: 4, vc_profile: id }, entries: [
     { label: 'YS9i', target: { '/': 'bafkqaaa' } },
     { label: 'QHBheWxvYWQ=', target: { '/': 'bafkqaaa' } },
     { label: '', target: { '/': 'bafkqaaa' } }
@@ -56,12 +56,12 @@ if (kind === 'verifier') {
   const candidate = JSON.parse(await globalThis[name](new TextEncoder().encode(JSON.stringify(state))))
   const expected = corpus.vectors.find(v => v.id === `profile-${id}.opaque-label`)
   assert.equal(candidate.root, expected.verification.request.root)
-  assert.equal(candidate.profile, 'malt.authentication/4')
+  assert.equal(candidate.profile, 'malt.authentication/6')
   assert(candidate.nodes.length > 0)
   await assert.rejects(() => globalThis[name]('{}'))
-  state.descriptor.layout = 1
+  state.descriptor.layout = 255
   await assert.rejects(() => globalThis[name](new TextEncoder().encode(JSON.stringify(state))))
-  state.descriptor.layout = 4
+  state.descriptor.layout = 1
   state.descriptor.derivation_profile = 255
   await assert.rejects(() => globalThis[name](new TextEncoder().encode(JSON.stringify(state))))
   console.log(`V0 WASM writer ${backend}: exact native Root and rejection checks passed`)
