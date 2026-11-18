@@ -11,9 +11,9 @@ writer semantics independently in TypeScript.
 
 ## Version and Core release
 
-The package asset binding is `0.0.6`, built against the published
-`malt-core v0.0.11-rc.4` release at commit
-`595f1e05aa86b0339addaa0f0e2ac6672faa8e00`.
+The package asset binding is `0.0.7`, built against the published
+`malt-core v0.0.12-rc.2` release at commit
+`0c5dc0029bd89180f1ff9c8f87857c17aef6a094`.
 [`malt-core.lock.json`](./malt-core.lock.json) binds that tag, commit, Go module
 checksums. The `malt.ts-core-lock/v2` lock binds Core source only; Core WASM
 assets are not required. This repository exclusively owns WASM entrypoints,
@@ -107,12 +107,11 @@ indices as eight unsigned big-endian bytes, and `encodeKeyLabel(Uint8Array)`
 serializes Direct 32-byte keys. `deriveCoordinate({profile, label})` executes
 Core derivation in the verifier Worker and returns a key or a bigint index.
 JavaScript performs no label hashing or application path normalization.
-Map layout 4 authenticates exact original label bytes and targets; distinct
-labels at the same full coordinate are errors. Layout 1 is rejected without a
-compatibility reader. Rebuild old Map state and its dependent parent Roots;
-List remains layout 3 and Root V=0 is unchanged. Core rc.4 includes rc.3's
-empty-cell scalar-zero encoding; roots and proofs from rc.2 or earlier must
-be regenerated from original inputs, including dependent parent Roots.
+Map layout 1 authenticates original label bytes and targets. Distinct labels at
+the same full coordinate are errors. List layout 2 authenticates contiguous
+indices. Both use Root V=0. When upgrading from layouts 4/3, rebuild both
+kinds of tree from the original inputs, then rebuild dependent parents and
+regenerate proofs. Complete candidates use `malt.authentication/6`.
 
 `prepareAuthentication(backend, stateJSON)` builds a complete candidate.
 `updateAuthentication(backend, candidateJSON, stateJSON)` verifies a complete
@@ -154,12 +153,12 @@ cancels pending operations; a subsequent request creates a new generation.
 ### Materialization batches and receipts
 
 `validateAuthenticationBatch(backend, batchJSON)` verifies all candidates and
-returns Core's digest of the exact `malt.authentication-batch/2` batch.
+returns Core's digest of the exact `malt.authentication-batch/3` batch.
 Candidates appear before parents and lineage successors. A bootstrap batch
 includes its newly constructed base.
 
 `validateAuthenticationReceipt(backend, batchJSON, receiptJSON)` checks the
-`malt.authentication-receipt/2` transaction ID, base, final Root, digest and
+`malt.authentication-receipt/3` transaction ID, base, final Root, digest and
 durable boundary. It returns the final Root without modifying retained state.
 Receipts acknowledge persistence; they neither prove a portable state
 transition nor publish a head or grant client trust. Applications own durable
@@ -172,7 +171,7 @@ session snapshot compatibility APIs. Worker readiness requires the complete
 current ABI. There are no forwarding aliases or optional old-runtime exports.
 
 The `malt-core.lock.json` and packaged binary assets identify the published
-Core `v0.0.11-rc.4` release. Its current host and batch APIs are bound to the
+Core `v0.0.12-rc.2` release. Its current host and batch APIs are bound to the
 exact release tag, source commit, and module checksums.
 Source integration checks remain separate from this published release binding.
 
@@ -192,7 +191,7 @@ current contracts to the exact release selected by the lock.
 ### WASM ownership and archives
 
 Core provides the Go SDK, cryptographic parameter metadata, and portable
-`conformance/authentication-v3.json` corpus. All JavaScript/WASM runners live
+`conformance/authentication-v4.json` corpus. All JavaScript/WASM runners live
 in this repository; tests never execute a Core-owned browser build or runner.
 `make test-wasm` tests the pinned published Core release. For a proposed Core
 source change, use the explicit non-release `scripts/test-core-source.sh`.
@@ -211,4 +210,4 @@ The package uses root-only List metadata: `count` plus an optional
 opaque `payload_cid`. Range bounds are element indices, and non-root vectors
 have no reserved metadata slot. Application JSON decoding stays in consumers.
 The packaged verifier and writer assets are built from the exact audited Core
-release above and pass its `authentication-v3.json` conformance corpus.
+release above and pass its `authentication-v4.json` conformance corpus.
