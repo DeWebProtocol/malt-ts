@@ -108,10 +108,11 @@ serializes Direct 32-byte keys. `deriveCoordinate({profile, label})` executes
 Core derivation in the verifier Worker and returns a key or a bigint index.
 JavaScript performs no label hashing or application path normalization.
 Map layout 1 authenticates original label bytes and targets. Distinct labels at
-the same full coordinate are errors. List layout 2 authenticates contiguous
-indices. Both use Root V=0. When upgrading from layouts 4/3, rebuild both
-kinds of tree from the original inputs, then rebuild dependent parents and
-regenerate proofs. Complete candidates use `malt.authentication/6`.
+the same full coordinate are errors. List layout 2 authenticates indexed
+bindings and permits empty cells below the count. Both use Root V=0.
+When upgrading from layouts 4/3, rebuild both kinds of tree from the original
+inputs, then rebuild dependent parents and regenerate proofs. Complete candidates
+use `malt.authentication/6`.
 
 `prepareAuthentication(backend, stateJSON)` builds a complete candidate.
 `updateAuthentication(backend, candidateJSON, stateJSON)` verifies a complete
