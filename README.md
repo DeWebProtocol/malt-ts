@@ -11,9 +11,9 @@ writer semantics independently in TypeScript.
 
 ## Version and Core release
 
-The package asset binding is `0.0.7`, built against the published
-`malt-core v0.0.12-rc.2` release at commit
-`0c5dc0029bd89180f1ff9c8f87857c17aef6a094`.
+The package asset binding is `0.0.8`, built against the published
+`malt-core v0.0.12-rc.3` release at commit
+`69b49d6efa73f95f2a6bea4ac1741b59d776a239`.
 [`malt-core.lock.json`](./malt-core.lock.json) binds that tag, commit, Go module
 checksums. The `malt.ts-core-lock/v2` lock binds Core source only; Core WASM
 assets are not required. This repository exclusively owns WASM entrypoints,
@@ -171,7 +171,7 @@ session snapshot compatibility APIs. Worker readiness requires the complete
 current ABI. There are no forwarding aliases or optional old-runtime exports.
 
 The `malt-core.lock.json` and packaged binary assets identify the published
-Core `v0.0.12-rc.2` release. Its current host and batch APIs are bound to the
+Core `v0.0.12-rc.3` release. Its current host and batch APIs are bound to the
 exact release tag, source commit, and module checksums.
 Source integration checks remain separate from this published release binding.
 
@@ -191,7 +191,7 @@ current contracts to the exact release selected by the lock.
 ### WASM ownership and archives
 
 Core provides the Go SDK, cryptographic parameter metadata, and portable
-`conformance/authentication-v4.json` corpus. All JavaScript/WASM runners live
+`conformance/authentication-v5.json` corpus. All JavaScript/WASM runners live
 in this repository; tests never execute a Core-owned browser build or runner.
 `make test-wasm` tests the pinned published Core release. For a proposed Core
 source change, use the explicit non-release `scripts/test-core-source.sh`.
@@ -207,7 +207,9 @@ The former Core WASM manifest/asset-set properties are removed. Consumers use
 this package's asset checksums and build provenance for the WASM it distributes.
 
 The package uses root-only List metadata: `count` plus an optional
-opaque `payload_cid`. Range bounds are element indices, and non-root vectors
+opaque `payload_cid`. A List can contain empty cells below its authenticated
+count. The verifier checks a zero-scalar opening for an empty cell or subtree.
+Range bounds are element indices, and non-root vectors
 have no reserved metadata slot. Application JSON decoding stays in consumers.
 The packaged verifier and writer assets are built from the exact audited Core
-release above and pass its `authentication-v4.json` conformance corpus.
+release above and pass its `authentication-v5.json` conformance corpus.
