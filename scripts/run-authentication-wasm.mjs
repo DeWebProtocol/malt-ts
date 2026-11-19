@@ -2,6 +2,7 @@ import assert from 'node:assert/strict'
 import { webcrypto } from 'node:crypto'
 import { readFile } from 'node:fs/promises'
 import { pathToFileURL } from 'node:url'
+import { encodeIndexLabel } from '../src/coordinate.mjs'
 
 const [kind, wasm, runtime, corpusPath, backend = 'all'] = process.argv.slice(2)
 assert(['verifier', 'writer'].includes(kind), 'select verifier or writer')
@@ -22,7 +23,7 @@ while (typeof globalThis[name] !== 'function') {
   await new Promise(resolve => setTimeout(resolve, 10))
 }
 const corpus = JSON.parse(await readFile(corpusPath, 'utf8'))
-assert.equal(corpus.schema, 'malt.conformance.authentication/4')
+assert.equal(corpus.schema, 'malt.conformance.authentication/5')
 if (kind === 'verifier') {
   const derive = (profile, bytes) => JSON.parse(globalThis.maltDeriveCoordinate(profile, bytes))
   for (const index of [0n, 42n, 9007199254740993n, 18446744073709551615n]) {
@@ -58,6 +59,16 @@ if (kind === 'verifier') {
   assert.equal(candidate.root, expected.verification.request.root)
   assert.equal(candidate.profile, 'malt.authentication/6')
   assert(candidate.nodes.length > 0)
+  const width = id === 1 ? 4096 : 256
+  const target = { '/': 'bafkqaaa' }
+  const sparseList = {
+    descriptor: { layout: 2, derivation_profile: 3, vc_profile: id },
+    payload_cid: target,
+    entries: [0, 2 * width].map(index => ({ label: encodeIndexLabel(index), target }))
+  }
+  const sparseCandidate = JSON.parse(await globalThis[name](new TextEncoder().encode(JSON.stringify(sparseList))))
+  const emptyCell = corpus.vectors.find(vector => vector.id === `profile-${id}.empty-list-cell`)
+  assert.equal(sparseCandidate.root, emptyCell.verification.request.root, 'sparse List Root differs from Core')
   await assert.rejects(() => globalThis[name]('{}'))
   state.descriptor.layout = 255
   await assert.rejects(() => globalThis[name](new TextEncoder().encode(JSON.stringify(state))))
