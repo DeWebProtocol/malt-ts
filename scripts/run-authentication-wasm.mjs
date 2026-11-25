@@ -23,7 +23,7 @@ while (typeof globalThis[name] !== 'function') {
   await new Promise(resolve => setTimeout(resolve, 10))
 }
 const corpus = JSON.parse(await readFile(corpusPath, 'utf8'))
-assert.equal(corpus.schema, 'malt.conformance.authentication/5')
+assert.equal(corpus.schema, 'malt.conformance.authentication/1')
 if (kind === 'verifier') {
   const derive = (profile, bytes) => JSON.parse(globalThis.maltDeriveCoordinate(profile, bytes))
   for (const index of [0n, 42n, 9007199254740993n, 18446744073709551615n]) {

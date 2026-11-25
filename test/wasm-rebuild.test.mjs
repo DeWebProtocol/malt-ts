@@ -12,7 +12,7 @@ function writeSet(directory, host, changes = {}) {
   fs.mkdirSync(directory, { recursive: true })
   const provenance = {
     go_version: 'go1.26.8', go_toolchain: `go version go1.26.8 ${host}`,
-    target: 'js/wasm', core: { module_version: 'v0.0.12-rc.4' }, ...changes
+    target: 'js/wasm', core: { module_version: 'v0.0.12-rc.5' }, ...changes
   }
   fs.writeFileSync(path.join(directory, 'PROVENANCE.json'), JSON.stringify(provenance))
   fs.writeFileSync(path.join(directory, 'module.wasm'), 'wasm fixture')
