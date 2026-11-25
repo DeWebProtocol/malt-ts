@@ -11,9 +11,9 @@ writer semantics independently in TypeScript.
 
 ## Version and Core release
 
-The package asset binding is `0.0.9-rc.1`, built against the published
-`malt-core v0.0.12-rc.4` release at commit
-`b28f735a0ef75e9dd01ff3acb3c3360a1b67afde`.
+The package asset binding is `0.0.9-rc.2`, built against the published
+`malt-core v0.0.12-rc.5` release at commit
+`b743b7dbdeaaefb3ee1ae807e9acb1577ea236fb`.
 [`malt-core.lock.json`](./malt-core.lock.json) binds that tag, commit, Go module
 checksums. The `malt.ts-core-lock/v2` lock binds Core source only; Core WASM
 assets are not required. This repository exclusively owns WASM entrypoints,
@@ -172,7 +172,7 @@ session snapshot compatibility APIs. Worker readiness requires the complete
 current ABI. There are no forwarding aliases or optional old-runtime exports.
 
 The `malt-core.lock.json` and packaged binary assets identify the published
-Core `v0.0.12-rc.4` release. Its current host and batch APIs are bound to the
+Core `v0.0.12-rc.5` release. Its current host and batch APIs are bound to the
 exact release tag, source commit, and module checksums.
 Source integration checks remain separate from this published release binding.
 
@@ -192,7 +192,7 @@ current contracts to the exact release selected by the lock.
 ### WASM ownership and archives
 
 Core provides the Go SDK, cryptographic parameter metadata, and portable
-`conformance/authentication-v5.json` corpus. All JavaScript/WASM runners live
+`conformance/authentication-v1.json` corpus. All JavaScript/WASM runners live
 in this repository; tests never execute a Core-owned browser build or runner.
 `make test-wasm` tests the pinned published Core release. For a proposed Core
 source change, use the explicit non-release `scripts/test-core-source.sh`.
@@ -213,4 +213,4 @@ count. The verifier checks a zero-scalar opening for an empty cell or subtree.
 Range bounds are element indices, and non-root vectors
 have no reserved metadata slot. Application JSON decoding stays in consumers.
 The packaged verifier and writer assets are built from the exact audited Core
-release above and pass its `authentication-v5.json` conformance corpus.
+release above and pass its `authentication-v1.json` conformance corpus.
