@@ -1,13 +1,13 @@
 {
   "schema": "malt.ts-writer.provenance/v1",
   "source_repository": "https://github.com/DeWebProtocol/malt-ts.git",
-  "build_inputs_sha256": "ca6dbf1f758aea871ea5f7a94f063c0c333ba6b2ec8679ff155377fa73da63fc",
+  "build_inputs_sha256": "10cc5eebc100e2525dbaa78dbe7f840a9843040e25566ad87db5ff1e5b9726fc",
   "core": {
     "module_path": "github.com/dewebprotocol/malt-core",
-    "module_version": "v0.0.12-rc.5",
+    "module_version": "v0.0.12-rc.6",
     "source_repository": "https://github.com/DeWebProtocol/malt-core.git",
-    "source_commit": "b743b7dbdeaaefb3ee1ae807e9acb1577ea236fb",
-    "module_sum": "h1:68q2pd2w0qP8upboLbVk+9ZJa3RktnRJcTmcpHWmC0s=",
+    "source_commit": "d56335e702a2e69a978532871d0e5088a64e4cb2",
+    "module_sum": "h1:MTq6nqMX3QszFfjExua0Hr0IwiLZmw/g4EKUkqt8ifE=",
     "go_mod_sum": "h1:r3h6vMg1XN43S1N31hBrROPGP/w1+H5G4q3wiC3qL80="
   },
   "target": "js/wasm",
@@ -28,7 +28,7 @@
     "sha256": "3799df0a77d1843b13a3a08744165180a12e1cd2dca529bee64ad691ac63adaf"
   },
   "go_version": "go1.26.8",
-  "go_toolchain": "go version go1.26.8 windows/amd64",
+  "go_toolchain": "go version go1.26.8 linux/amd64",
   "build_flags": [
     "-p=6",
     "-mod=readonly",
